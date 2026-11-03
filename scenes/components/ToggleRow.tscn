@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/toggle_row.gd" id="1_toggle"]
+[ext_resource type="Script" path="res://scripts/ui/neon_button.gd" id="2_neon"]
+
+[node name="ToggleRow" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 84)
+size_flags_horizontal = 3
+theme_override_constants/separation = 22
+script = ExtResource("1_toggle")
+
+[node name="TextBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="TextBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+text = "OPTION"
+
+[node name="HintLabel" type="Label" parent="TextBox"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = ""
+
+[node name="ToggleButton" type="Button" parent="."]
+custom_minimum_size = Vector2(154, 64)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"ToggleButton"
+toggle_mode = true
+text = "ON"
+script = ExtResource("2_neon")
+plays_sound = false

@@ -1,0 +1,133 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/test_ad_overlay.gd" id="1_ad"]
+[ext_resource type="Script" path="res://scripts/ui/neon_button.gd" id="2_neon"]
+
+[node name="TestAdOverlay" type="CanvasLayer"]
+layer = 120
+script = ExtResource("1_ad")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0117647, 0.0117647, 0.0117647, 0.96)
+
+[node name="Center" type="CenterContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Root/Center"]
+custom_minimum_size = Vector2(860, 0)
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="Content" type="VBoxContainer" parent="Root/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 22
+alignment = 1
+
+[node name="TopLine" type="ColorRect" parent="Root/Center/Panel/Content"]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 0.180392, 0.576471, 0.8)
+
+[node name="Kicker" type="Label" parent="Root/Center/Panel/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "SIMULATED AD"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="Root/Center/Panel/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HeadingLabel"
+text = "TEST AD"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="Root/Center/Panel/Content"]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+text = "This is a local test placement. No ad network, tracking or purchase is involved. Close any time — the reward is optional."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Chips" type="HBoxContainer" parent="Root/Center/Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ChipA" type="PanelContainer" parent="Root/Center/Panel/Content/Chips"]
+layout_mode = 2
+theme_type_variation = &"ChipPanel"
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Content/Chips/ChipA"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "NO NETWORK"
+
+[node name="ChipB" type="PanelContainer" parent="Root/Center/Panel/Content/Chips"]
+layout_mode = 2
+theme_type_variation = &"ChipPanel"
+
+[node name="Label" type="Label" parent="Root/Center/Panel/Content/Chips/ChipB"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "NO TRACKING"
+
+[node name="CountdownLabel" type="Label" parent="Root/Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "REWARD IN 5"
+horizontal_alignment = 1
+
+[node name="Progress" type="ProgressBar" parent="Root/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+max_value = 5.0
+value = 5.0
+show_percentage = false
+
+[node name="ClaimButton" type="Button" parent="Root/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "CLAIM REWARD"
+disabled = true
+script = ExtResource("2_neon")
+
+[node name="CloseButton" type="Button" parent="Root/Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+theme_type_variation = &"GhostButton"
+text = "CLOSE"
+script = ExtResource("2_neon")

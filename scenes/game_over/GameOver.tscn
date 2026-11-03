@@ -1,0 +1,191 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/game_over.gd" id="1_over"]
+[ext_resource type="Script" path="res://scripts/ui/neon_button.gd" id="2_neon"]
+[ext_resource type="Script" path="res://scripts/gameplay/effects.gd" id="3_effects"]
+
+[node name="GameOver" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_over")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0196078, 0.0196078, 0.0196078, 0.9)
+
+[node name="Effects" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3_effects")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(920, 0)
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="Content" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="TopLine" type="ColorRect" parent="Center/Panel/Content"]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0, 0.960784, 1, 0.75)
+
+[node name="Kicker" type="Label" parent="Center/Panel/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "RUN ENDED"
+horizontal_alignment = 1
+
+[node name="RankLabel" type="Label" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"AccentLabel"
+text = "ROOKIE"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HugeLabel"
+text = "0"
+horizontal_alignment = 1
+
+[node name="ScoreCaption" type="Label" parent="Center/Panel/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "POINTS SCORED"
+horizontal_alignment = 1
+
+[node name="NewRecordPanel" type="PanelContainer" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"ChipPanel"
+
+[node name="Badge" type="Label" parent="Center/Panel/Content/NewRecordPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"BadgeLabel"
+text = "NEW RECORD"
+horizontal_alignment = 1
+
+[node name="Divider" type="HSeparator" parent="Center/Panel/Content"]
+layout_mode = 2
+
+[node name="StatsRow" type="HBoxContainer" parent="Center/Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 32
+alignment = 1
+
+[node name="BestBox" type="VBoxContainer" parent="Center/Panel/Content/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="Caption" type="Label" parent="Center/Panel/Content/StatsRow/BestBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "BEST"
+horizontal_alignment = 1
+
+[node name="BestValue" type="Label" parent="Center/Panel/Content/StatsRow/BestBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ValueLabel"
+text = "0"
+horizontal_alignment = 1
+
+[node name="TimeBox" type="VBoxContainer" parent="Center/Panel/Content/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="Caption" type="Label" parent="Center/Panel/Content/StatsRow/TimeBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "SURVIVED"
+horizontal_alignment = 1
+
+[node name="TimeValue" type="Label" parent="Center/Panel/Content/StatsRow/TimeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ValueLabel"
+text = "00:00"
+horizontal_alignment = 1
+
+[node name="Divider2" type="HSeparator" parent="Center/Panel/Content"]
+layout_mode = 2
+
+[node name="ContinueButton" type="Button" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 106)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "WATCH AD TO CONTINUE"
+script = ExtResource("2_neon")
+
+[node name="AdCaption" type="Label" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "TEST AD • OPTIONAL • YOUR SCORE IS ALREADY SAVED"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 98)
+layout_mode = 2
+text = "RESTART"
+script = ExtResource("2_neon")
+
+[node name="MenuButton" type="Button" parent="Center/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+theme_type_variation = &"GhostButton"
+text = "MAIN MENU"
+script = ExtResource("2_neon")
+
+[node name="Footer" type="Label" parent="Center/Panel/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "ONE MORE PRESS? YOUR RECORD IS SAVED LOCALLY."
+horizontal_alignment = 1

@@ -1,0 +1,66 @@
+; Engine configuration file.
+; ONE MORE SECOND — Godot 4 project
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+
+config_version=5
+
+[application]
+
+config/name="ONE MORE SECOND"
+config/description="A minimalist neon reflex arcade game. Switch lanes, stay alive, and chase one more second."
+config/version="1.0.0"
+run/main_scene="res://scenes/main/Main.tscn"
+run/max_fps=0
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/icons/icon_512.png"
+config/quit_on_go_back=false
+boot_splash/image="res://assets/textures/splash.png"
+boot_splash/bg_color=Color(0.0196078, 0.0196078, 0.0196078, 1)
+boot_splash/fullsize=false
+boot_splash/use_filter=true
+
+[autoload]
+
+Platform="*res://systems/platform/platform.gd"
+SaveManager="*res://systems/save/save_manager.gd"
+Analytics="*res://systems/analytics/analytics_manager.gd"
+AudioManager="*res://systems/audio/audio_manager.gd"
+SkinManager="*res://systems/skins/skin_manager.gd"
+Ads="*res://systems/ads/ads_manager.gd"
+Monetization="*res://systems/monetization/monetization_manager.gd"
+SceneRouter="*res://scripts/core/scene_router.gd"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/size/window_width_override=540
+window/size/window_height_override=960
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/handheld/orientation=1
+
+[gui]
+
+theme/custom="res://assets/theme/ui_theme.tres"
+theme/default_font_multichannel_signed_distance_field=true
+theme/default_font_subpixel_positioning=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_2d=0
+environment/defaults/default_clear_color=Color(0.0196078, 0.0196078, 0.0196078, 1)
+
+[physics]
+
+common/physics_ticks_per_second=60

@@ -1,0 +1,47 @@
+# Godot
+.godot/
+*.translation
+
+# Export and build artifacts
+exports/*
+!exports/.gitkeep
+!exports/.gdignore
+build/
+*.apk
+*.aab
+*.ipa
+*.xcarchive
+*.zip
+*.tpz
+
+# QA output
+tests/artifacts/
+tests/web-smoke-output/
+
+# Secrets and local signing material
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+*.provisionprofile
+export_credentials.cfg
+.env
+.env.*
+*.secret
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Node tooling (web smoke test)
+node_modules/
+package-lock.json
+package.json
+
+# Python tooling
+__pycache__/
+*.pyc

@@ -1,0 +1,66 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/gameplay.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/ui/backdrop.gd" id="2_backdrop"]
+[ext_resource type="Script" path="res://scripts/gameplay/spawner.gd" id="3_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://scripts/gameplay/effects.gd" id="5_effects"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/HUD.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/PausePanel.tscn" id="7_pause"]
+[ext_resource type="PackedScene" path="res://scenes/game_over/GameOver.tscn" id="8_over"]
+
+[node name="Gameplay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_game")
+
+[node name="Backdrop" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_backdrop")
+mode = "game"
+show_lanes = true
+scroll_speed = 26.0
+
+[node name="World" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Obstacles" type="Node2D" parent="World"]
+
+[node name="Spawner" type="Node" parent="World"]
+unique_name_in_owner = true
+script = ExtResource("3_spawner")
+obstacles_path = NodePath("../Obstacles")
+
+[node name="Player" parent="World" instance=ExtResource("4_player")]
+unique_name_in_owner = true
+
+[node name="Effects" type="Node2D" parent="World"]
+unique_name_in_owner = true
+script = ExtResource("5_effects")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" parent="HUDLayer" instance=ExtResource("6_hud")]
+unique_name_in_owner = true
+
+[node name="OverlayLayer" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="PausePanel" parent="OverlayLayer" instance=ExtResource("7_pause")]
+unique_name_in_owner = true
+
+[node name="GameOver" parent="OverlayLayer" instance=ExtResource("8_over")]
+unique_name_in_owner = true

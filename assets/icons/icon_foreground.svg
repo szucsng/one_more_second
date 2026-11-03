@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#00F5FF" stop-opacity="0.26"/>
+      <stop offset="0.6" stop-color="#9D4EDD" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leftRail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00F5FF" stop-opacity="0.2"/>
+      <stop offset="0.5" stop-color="#00F5FF"/>
+      <stop offset="1" stop-color="#00F5FF" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="rightRail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF2E93" stop-opacity="0.2"/>
+      <stop offset="0.5" stop-color="#FF2E93"/>
+      <stop offset="1" stop-color="#FF2E93" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="ship" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B8FDFF"/>
+      <stop offset="0.45" stop-color="#00F5FF"/>
+      <stop offset="1" stop-color="#9D4EDD"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#halo)"/>
+  <g>
+    <rect x="346" y="260" width="14" height="504" rx="7" fill="#00F5FF" opacity="0.14"/>
+    <rect x="350" y="260" width="6" height="504" rx="3" fill="url(#leftRail)"/>
+    <rect x="664" y="260" width="14" height="504" rx="7" fill="#FF2E93" opacity="0.14"/>
+    <rect x="668" y="260" width="6" height="504" rx="3" fill="url(#rightRail)"/>
+  </g>
+  <g>
+    <path d="M512 330 L570 470 L636 584 L558 558 L540 660 L512 628 L484 660 L466 558 L388 584 L454 470 Z"
+          fill="#00F5FF" opacity="0.14"/>
+    <path d="M512 346 L562 468 L620 566 L556 546 L540 640 L512 612 L484 640 L468 546 L404 566 L462 468 Z"
+          fill="url(#ship)" stroke="#B8FDFF" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M512 410 L538 484 L552 506 L512 494 L472 506 L486 484 Z" fill="#FFFFFF"/>
+    <line x1="512" y1="410" x2="512" y2="548" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <line x1="484" y1="544" x2="466" y2="596" stroke="#9D4EDD" stroke-width="8" stroke-linecap="round"/>
+    <line x1="540" y1="544" x2="558" y2="596" stroke="#9D4EDD" stroke-width="8" stroke-linecap="round"/>
+    <line x1="498" y1="628" x2="492" y2="690" stroke="#FF2E93" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    <line x1="526" y1="628" x2="532" y2="690" stroke="#00F5FF" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<meta name="theme-color" content="#050505">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="description" content="ONE MORE SECOND — a minimalist neon reflex arcade game. Two lanes. One tap. Stay alive.">
+	<title>$GODOT_PROJECT_NAME</title>
+	<style>
+		:root {
+			--bg: #050505;
+			--surface: #0c0c0c;
+			--cyan: #00f5ff;
+			--purple: #9d4edd;
+			--pink: #ff2e93;
+			--muted: #858585;
+			--white: #ffffff;
+		}
+		* { box-sizing: border-box; }
+		html, body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			background: var(--bg);
+			color: var(--white);
+			touch-action: none;
+			overscroll-behavior: none;
+			-webkit-user-select: none;
+			user-select: none;
+			font-family: "Rajdhani", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+		}
+		#canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			outline: none;
+			background: var(--bg);
+		}
+		#status {
+			position: fixed;
+			inset: 0;
+			z-index: 20;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 28px;
+			padding: 32px;
+			padding-top: max(32px, env(safe-area-inset-top));
+			padding-bottom: max(32px, env(safe-area-inset-bottom));
+			background:
+				radial-gradient(ellipse 60% 38% at 50% 38%, rgba(0, 245, 255, 0.10), transparent 70%),
+				radial-gradient(ellipse 60% 38% at 50% 92%, rgba(157, 78, 221, 0.10), transparent 70%),
+				linear-gradient(rgba(0, 245, 255, 0.025) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(0, 245, 255, 0.025) 1px, transparent 1px),
+				var(--bg);
+			background-size: auto, auto, 80px 80px, 80px 80px, auto;
+			transition: opacity 500ms ease, visibility 500ms ease;
+			text-align: center;
+		}
+		#status.is-hidden {
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+		}
+		.mark {
+			width: 110px;
+			height: 110px;
+			filter: drop-shadow(0 0 22px rgba(0, 245, 255, 0.45));
+			animation: float 4s ease-in-out infinite;
+		}
+		@keyframes float {
+			0%, 100% { transform: translateY(0); }
+			50% { transform: translateY(-8px); }
+		}
+		.kicker {
+			margin: 0;
+			font-size: 13px;
+			letter-spacing: 0.5em;
+			text-transform: uppercase;
+			color: var(--cyan);
+			font-weight: 600;
+		}
+		.title {
+			margin: 0;
+			line-height: 0.92;
+			font-size: clamp(42px, 11vw, 92px);
+			font-weight: 800;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+		}
+		.title span {
+			display: block;
+			color: var(--cyan);
+			text-shadow: 0 0 30px rgba(0, 245, 255, 0.55);
+		}
+		.tagline {
+			margin: -10px 0 0;
+			color: var(--muted);
+			letter-spacing: 0.24em;
+			font-size: 12px;
+			text-transform: uppercase;
+		}
+		.loading {
+			width: min(420px, 76vw);
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+		.track {
+			height: 5px;
+			width: 100%;
+			background: rgba(255, 255, 255, 0.08);
+			border-radius: 99px;
+			overflow: hidden;
+		}
+		#bar {
+			height: 100%;
+			width: 8%;
+			background: var(--cyan);
+			box-shadow: 0 0 18px rgba(0, 245, 255, 0.75);
+			border-radius: inherit;
+			transition: width 220ms ease;
+		}
+		#status-text {
+			font-size: 12px;
+			letter-spacing: 0.28em;
+			color: var(--muted);
+			text-transform: uppercase;
+		}
+		#status-notice {
+			display: none;
+			max-width: 560px;
+			padding: 16px 20px;
+			border: 1px solid rgba(255, 46, 147, 0.5);
+			border-radius: 12px;
+			background: rgba(255, 46, 147, 0.08);
+			color: #ffd7e9;
+			line-height: 1.5;
+			font-size: 14px;
+			white-space: pre-line;
+		}
+		.actions {
+			display: flex;
+			gap: 12px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		button {
+			font: inherit;
+			font-weight: 700;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			font-size: 12px;
+			color: var(--white);
+			background: rgba(12, 12, 12, 0.9);
+			border: 1px solid rgba(0, 245, 255, 0.35);
+			border-radius: 10px;
+			padding: 12px 22px;
+			cursor: pointer;
+			transition: border-color 160ms ease, background 160ms ease;
+		}
+		button:hover {
+			border-color: var(--cyan);
+			background: rgba(0, 245, 255, 0.08);
+		}
+		button:focus-visible {
+			outline: 2px solid var(--cyan);
+			outline-offset: 3px;
+		}
+		.notes {
+			position: absolute;
+			bottom: max(18px, env(safe-area-inset-bottom));
+			left: 0;
+			right: 0;
+			padding: 0 20px;
+			font-size: 10px;
+			letter-spacing: 0.18em;
+			color: #4d4d4d;
+			text-transform: uppercase;
+		}
+		@media (max-height: 640px) {
+			#status { gap: 16px; }
+			.mark { width: 72px; height: 72px; }
+			.notes { display: none; }
+		}
+		@media (display-mode: standalone) {
+			.notes { display: none; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.mark { animation: none; }
+			#status, #bar { transition: none; }
+		}
+	</style>
+	$GODOT_HEAD_INCLUDE
+</head>
+<body>
+	<canvas id="canvas">
+		Your browser does not support the canvas tag.
+	</canvas>
+	<noscript>ONE MORE SECOND needs JavaScript to run.</noscript>
+
+	<div id="status" role="status" aria-live="polite">
+		<svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true">
+			<defs>
+				<linearGradient id="shipGrad" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0" stop-color="#b8fdff"/>
+					<stop offset="0.45" stop-color="#00f5ff"/>
+					<stop offset="1" stop-color="#9d4edd"/>
+				</linearGradient>
+			</defs>
+			<rect x="300" y="240" width="8" height="544" rx="4" fill="#00f5ff" opacity="0.55"/>
+			<rect x="716" y="240" width="8" height="544" rx="4" fill="#ff2e93" opacity="0.55"/>
+			<path d="M512 280 L590 470 L680 606 L566 570 L542 704 L512 662 L482 704 L458 570 L344 606 L434 470 Z"
+				fill="url(#shipGrad)" stroke="#b8fdff" stroke-width="5" stroke-linejoin="round"/>
+			<path d="M512 358 L550 480 L572 514 L512 496 L452 514 L474 480 Z" fill="#ffffff"/>
+			<line x1="512" y1="358" x2="512" y2="560" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+			<line x1="500" y1="642" x2="494" y2="718" stroke="#ff2e93" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+			<line x1="524" y1="642" x2="530" y2="718" stroke="#00f5ff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+		</svg>
+		<p class="kicker">A reflex arcade</p>
+		<h1 class="title">ONE MORE<span>SECOND</span></h1>
+		<p class="tagline">Two lanes. One tap. Stay alive.</p>
+
+		<div class="loading" id="loading">
+			<div class="track"><div id="bar"></div></div>
+			<div id="status-text">Initializing…</div>
+		</div>
+		<div id="status-notice"></div>
+		<div class="actions" id="actions">
+			<button id="fullscreen-button" type="button">Enter fullscreen</button>
+		</div>
+		<div class="notes">Best played in portrait · Progress saved on this device</div>
+	</div>
+
+	<script src="$GODOT_URL"></script>
+	<script>
+		const GODOT_CONFIG = $GODOT_CONFIG;
+		const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+		const engine = new Engine(GODOT_CONFIG);
+
+		(function () {
+			const overlay = document.getElementById('status');
+			const loading = document.getElementById('loading');
+			const bar = document.getElementById('bar');
+			const statusText = document.getElementById('status-text');
+			const notice = document.getElementById('status-notice');
+			const actions = document.getElementById('actions');
+			const fullscreenButton = document.getElementById('fullscreen-button');
+
+			function hideOverlay() {
+				overlay.classList.add('is-hidden');
+			}
+
+			function showFailure(message) {
+				loading.style.display = 'none';
+				notice.style.display = 'block';
+				notice.textContent = message;
+			}
+
+			function formatError(err) {
+				if (err instanceof Error) return err.message;
+				if (typeof err === 'string') return err;
+				return 'An unknown error occurred.';
+			}
+
+			const fullscreenAvailable = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+			fullscreenButton.style.display = fullscreenAvailable ? '' : 'none';
+			fullscreenButton.addEventListener('click', () => {
+				const root = document.documentElement;
+				const request = root.requestFullscreen || root.webkitRequestFullscreen;
+				if (request) {
+					Promise.resolve(request.call(root)).catch(() => {});
+				}
+			});
+
+			document.addEventListener('fullscreenchange', () => {
+				fullscreenButton.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Enter fullscreen';
+			});
+
+			window.addEventListener('contextmenu', (event) => event.preventDefault());
+			document.addEventListener('dblclick', (event) => event.preventDefault(), { passive: false });
+
+			const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+			if (missing.length !== 0) {
+				showFailure(
+					'This browser is missing features required to run the game:\n' +
+					missing.join('\n') +
+					'\nPlease update Chrome, Edge, Firefox or Safari.'
+				);
+				return;
+			}
+
+			let started = false;
+			engine.startGame({
+				onProgress: (current, total) => {
+					if (current > 0 && total > 0) {
+						const percent = Math.min(100, Math.round((current / total) * 100));
+						bar.style.width = percent + '%';
+						statusText.textContent = 'Loading ' + percent + '%';
+					}
+				},
+			}).then(() => {
+				started = true;
+				bar.style.width = '100%';
+				statusText.textContent = 'Ready';
+				setTimeout(hideOverlay, 180);
+			}).catch((err) => {
+				showFailure('The game could not start.\n' + formatError(err));
+			});
+
+			// If loading stalls for a long time, keep the screen informative rather
+			// than leaving the player with an empty page.
+			setTimeout(() => {
+				if (!started) {
+					statusText.textContent = 'Still loading…';
+				}
+			}, 12000);
+		}());
+	</script>
+</body>
+</html>

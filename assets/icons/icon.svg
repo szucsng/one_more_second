@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#101014"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.52" r="0.55">
+      <stop offset="0" stop-color="#00F5FF" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#9D4EDD" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leftRail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00F5FF" stop-opacity="0.15"/>
+      <stop offset="0.5" stop-color="#00F5FF"/>
+      <stop offset="1" stop-color="#00F5FF" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="rightRail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF2E93" stop-opacity="0.15"/>
+      <stop offset="0.5" stop-color="#FF2E93"/>
+      <stop offset="1" stop-color="#FF2E93" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="ship" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B8FDFF"/>
+      <stop offset="0.45" stop-color="#00F5FF"/>
+      <stop offset="1" stop-color="#9D4EDD"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#halo)"/>
+  <g opacity="0.18" stroke="#00F5FF" stroke-width="2">
+    <line x1="160" y1="0" x2="160" y2="1024"/>
+    <line x1="864" y1="0" x2="864" y2="1024"/>
+    <line x1="0" y1="250" x2="1024" y2="250"/>
+    <line x1="0" y1="774" x2="1024" y2="774"/>
+  </g>
+  <g>
+    <rect x="286" y="196" width="18" height="632" rx="9" fill="#00F5FF" opacity="0.12"/>
+    <rect x="292" y="196" width="6" height="632" rx="3" fill="url(#leftRail)"/>
+    <rect x="720" y="196" width="18" height="632" rx="9" fill="#FF2E93" opacity="0.12"/>
+    <rect x="726" y="196" width="6" height="632" rx="3" fill="url(#rightRail)"/>
+  </g>
+  <g>
+    <path d="M512 268 L600 458 L692 612 L572 574 L548 720 L512 674 L476 720 L452 574 L332 612 L424 458 Z"
+          fill="#00F5FF" opacity="0.10"/>
+    <path d="M512 288 L586 452 L664 582 L564 550 L544 674 L512 636 L480 674 L460 550 L360 582 L438 452 Z"
+          fill="url(#ship)" stroke="#B8FDFF" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M512 362 L548 478 L570 512 L512 496 L454 512 L476 478 Z" fill="#FFFFFF"/>
+    <line x1="512" y1="362" x2="512" y2="558" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+    <line x1="462" y1="552" x2="432" y2="624" stroke="#9D4EDD" stroke-width="10" stroke-linecap="round"/>
+    <line x1="562" y1="552" x2="592" y2="624" stroke="#9D4EDD" stroke-width="10" stroke-linecap="round"/>
+    <line x1="490" y1="650" x2="482" y2="748" stroke="#FF2E93" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+    <line x1="534" y1="650" x2="542" y2="748" stroke="#00F5FF" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <g fill="#FFFFFF">
+    <circle cx="512" cy="864" r="7" opacity="0.9"/>
+    <circle cx="470" cy="864" r="4" opacity="0.4"/>
+    <circle cx="554" cy="864" r="4" opacity="0.4"/>
+  </g>
+</svg>

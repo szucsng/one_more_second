@@ -1,0 +1,266 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/settings.gd" id="1_settings"]
+[ext_resource type="Script" path="res://scripts/ui/backdrop.gd" id="2_backdrop"]
+[ext_resource type="Script" path="res://scripts/ui/neon_button.gd" id="3_neon"]
+[ext_resource type="PackedScene" path="res://scenes/components/ToggleRow.tscn" id="4_toggle"]
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Backdrop" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_backdrop")
+
+[node name="Content" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 76
+theme_override_constants/margin_top = 64
+theme_override_constants/margin_right = 76
+theme_override_constants/margin_bottom = 52
+
+[node name="VBox" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="HBoxContainer" parent="Content/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="BackButton" type="Button" parent="Content/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 84)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"IconButton"
+tooltip_text = "Back"
+text = "<"
+script = ExtResource("3_neon")
+
+[node name="TitleBox" type="VBoxContainer" parent="Content/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Content/VBox/Header/TitleBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HeadingLabel"
+text = "SETTINGS"
+
+[node name="Subtitle" type="Label" parent="Content/VBox/Header/TitleBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "AUDIO / FEEL / PRIVACY"
+
+[node name="HeaderSpacer" type="Control" parent="Content/VBox/Header"]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HeaderGap" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Content/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Rows" type="VBoxContainer" parent="Content/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="AudioSection" type="Label" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "AUDIO"
+
+[node name="SfxPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="SfxRow" parent="Content/VBox/Scroll/Rows/SfxPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "SOUND EFFECTS"
+hint = "Switches, impacts and interface feedback."
+initial_value = true
+
+[node name="MusicPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="MusicRow" parent="Content/VBox/Scroll/Rows/MusicPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "MUSIC"
+hint = "Synthwave loop written for the game."
+initial_value = true
+
+[node name="VolumePanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="VolumeBox" type="VBoxContainer" parent="Content/VBox/Scroll/Rows/VolumePanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="VolumeHeader" type="HBoxContainer" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox"]
+layout_mode = 2
+
+[node name="VolumeTitle" type="Label" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox/VolumeHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+text = "MASTER VOLUME"
+
+[node name="VolumeLabel" type="Label" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox/VolumeHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"SmallValueLabel"
+text = "80%"
+horizontal_alignment = 2
+
+[node name="VolumeControls" type="HBoxContainer" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="VolumeDown" type="Button" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox/VolumeControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(68, 64)
+layout_mode = 2
+theme_type_variation = &"IconButton"
+text = "-"
+script = ExtResource("3_neon")
+
+[node name="VolumeBar" type="ProgressBar" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox/VolumeControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+max_value = 100.0
+value = 80.0
+show_percentage = false
+
+[node name="VolumeUp" type="Button" parent="Content/VBox/Scroll/Rows/VolumePanel/VolumeBox/VolumeControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(68, 64)
+layout_mode = 2
+theme_type_variation = &"IconButton"
+text = "+"
+script = ExtResource("3_neon")
+
+[node name="FeelSection" type="Label" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "GAME FEEL"
+
+[node name="VibrationPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="VibrationRow" parent="Content/VBox/Scroll/Rows/VibrationPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "VIBRATION"
+hint = "Short haptic feedback on lane switches."
+initial_value = true
+
+[node name="EffectsPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="EffectsRow" parent="Content/VBox/Scroll/Rows/EffectsPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "REDUCE EFFECTS"
+hint = "Fewer particles, softer glow, no screen shake."
+initial_value = false
+
+[node name="FullscreenPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="FullscreenRow" parent="Content/VBox/Scroll/Rows/FullscreenPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "FULLSCREEN"
+hint = "Hide the browser chrome while playing."
+initial_value = false
+
+[node name="PrivacySection" type="Label" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "PRIVACY"
+
+[node name="AnalyticsPanel" type="PanelContainer" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+theme_type_variation = &"RowPanel"
+
+[node name="AnalyticsRow" parent="Content/VBox/Scroll/Rows/AnalyticsPanel" instance=ExtResource("4_toggle")]
+unique_name_in_owner = true
+title = "LOCAL ANALYTICS"
+hint = "Written to this device only. Never uploaded."
+initial_value = true
+
+[node name="Divider" type="HSeparator" parent="Content/VBox/Scroll/Rows"]
+layout_mode = 2
+
+[node name="ResetButton" type="Button" parent="Content/VBox/Scroll/Rows"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+theme_type_variation = &"DangerButton"
+text = "RESET PROGRESS"
+script = ExtResource("3_neon")
+
+[node name="StatusLabel" type="Label" parent="Content/VBox/Scroll/Rows"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="FooterGap" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="VersionLabel" type="Label" parent="Content/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "ONE MORE SECOND  •  v1.0.0"
+horizontal_alignment = 1
