@@ -1,6 +1,6 @@
 # Monetization
 
-## 1. Current state (v1.0.0)
+## 1. Current state (v1.1.0)
 
 The game is free, complete and playable without spending money or watching anything.
 
@@ -238,6 +238,10 @@ Current events:
 - `revive_used` — gameplay-side confirmation, score/duration
 - `interstitial_shown` — only when enabled
 - `new_record`, `game_over`, `score_reached` — funnel context
+- `combo_milestone`, `perfect_dodge`, `challenge_completed` — skill/replay signals
+
+Daily challenges are local, free and score-only; they are not a purchasable product
+and must never be sold as power.
 
 No ad identifiers or personal data are logged. If a real analytics backend is added,
 keep monetization events free of identifiers and disclose the provider in the privacy

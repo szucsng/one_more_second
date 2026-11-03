@@ -22,7 +22,7 @@ Godot 4.7.2 · GDScript · Compatibility renderer · 1080×1920 portrait canvas.
 project.godot
 └─ autoloads (in order)
    Platform → SaveManager → Analytics → AudioManager → SkinManager
-            → AdsManager → Monetization → SceneRouter
+            → Challenges → AdsManager → Monetization → SceneRouter
 └─ main scene: scenes/main/Main.tscn
    └─ Main.gd
       ├─ DisplayServer.window_set_title()
@@ -38,6 +38,8 @@ Autoload order matters:
 - `Analytics` reads the persisted analytics switch and logs `session_started`.
 - `AudioManager` connects to `SaveManager.settings_changed`.
 - `SkinManager` reads/writes the selected skin through `SaveManager`.
+- `Challenges` generates/loads the local daily set after the save is available and
+  persists progress through `SaveManager`.
 - `AdsManager` reads policy config and uses `Platform.is_web`.
 - `SceneRouter` is last because it may reference analytics on screen changes.
 
@@ -114,12 +116,52 @@ Key decisions:
   pause panel instead of letting the run continue unseen.
 - **Android back** pauses/resumes during play and opens the menu from game over;
   other screens return to the menu. The menu exits the app.
+- **Combo** is owned by gameplay, incremented exactly once per passed obstacle,
+  reset on collision and on every restart. Pause preserves it.
+- **Perfect-dodge candidates** are marked on a lane switch but confirmed only when
+  the obstacle passes, so a fatal late switch cannot earn the bonus.
+- **Daily challenge progress** updates from dodge/perfect/combo/score/survival
+  events and is persisted through the existing save document.
 
-### Scoring
+### Scoring and combo
 
-`Obstacle` emits `passed` once when its center crosses `PASS_Y = 1590`. The spawner
-forwards the obstacle to gameplay, which adds exactly one point, updates the HUD,
-plays a quiet tick, emits sparks and tracks 10-point analytics milestones.
+`scripts/core/scoring.gd` is the pure score authority:
+
+| Combo | Multiplier | Points per dodge |
+| --- | --- | --- |
+| 0–4 | ×1 | 1 |
+| 5–9 | ×2 | 2 |
+| 10–19 | ×3 | 3 |
+| 20–29 | ×4 | 4 |
+| 30+ | ×5 | 5 |
+
+- `Obstacle` emits `passed` once; gameplay increments combo exactly once and adds
+  `Scoring.obstacle_points(combo)`.
+- Ten consecutive dodges therefore total 17 points.
+- Milestones at 5/10/20/30 trigger HUD feedback, particles and a dedicated sound.
+- Combo resets on collision and restart; `max_combo` is retained for the run report.
+- Perfect dodge adds a flat `+2` (`Scoring.PERFECT_BONUS`) in addition to the normal
+  dodge points, but never adds extra combo from the same obstacle.
+- Challenge score rewards are added to the run score; they are once-per-day and
+  marked complete before the reward signal is emitted.
+- Score is saved only at run finalization, so best score/statistics remain consistent
+  with the existing system and guard against double finalization.
+
+### Perfect dodge
+
+- Config: `Scoring.PERFECT_MIN_TIME = 0.10`, `Scoring.PERFECT_WINDOW = 0.28`.
+- On a lane switch, gameplay scans active obstacles in the lane being left.
+  A candidate must have a time-to-impact between 0.10 and 0.28 s and the new lane
+  must be free of an obstacle within that window + 80 ms.
+- The candidate is marked `perfect_pending`; the reward is confirmed only when it
+  passes (`Obstacle.passed`) while the run is alive. A switch that ends in a
+  collision never rewards.
+- `perfect_awarded` prevents duplicate rewards even if the player switches back and
+  forth. A single switch can mark at most the nearest qualifying obstacle.
+- Detection is position/time based, so it is frame-rate independent and scales with
+  obstacle speed. It never asks for a sub-frame input.
+- Feedback: +2 score, HUD callout, cyan/gold ring and sparks, procedural SFX,
+  haptic pulse, screen shake (skipped by reduced effects), challenge progress.
 
 ### Collision
 
@@ -134,26 +176,35 @@ plays a quiet tick, emits sparks and tracks 10-point analytics milestones.
 
 `scripts/core/difficulty.gd` is pure:
 
-- speed: `620 → 1500` over 105 s with an ease-out curve;
-- pattern interval: `1.05 s → 0.55 s` over 95 s;
-- pattern unlocks: stagger 7 s, zigzag 20 s, rush 38 s;
-- lane-switch reaction budget: 0.16–0.22 s.
+- speed: `620 → 1500` over 105 s with an ease-out curve (hard ceiling);
+- interval: `1.05 s → 0.55 s` over 95 s with a ±4.5% cadence wave;
+- minimum reaction time: **0.24 s** (`MIN_REACTION_TIME`);
+- pattern unlocks (central `PATTERN_UNLOCKS`):
+  single 0 s, stagger 8 s, zigzag 22 s, late switch 32 s, rush 42 s, gauntlet 74 s;
+- recovery sections at 20/48/78/112 s, each **2.3 s** long.
 
 `ObstacleSpawner` rules:
 
-1. Every pattern item has an explicit delay (0.54–1.62 s), so lane changes are spaced
-   in **time**, not pixels.
+1. Every pattern item has an explicit delay (0.52–2.08 s), so lane decisions are
+   spaced in **time**, not pixels.
 2. A new pattern starts only after all items from the previous pattern have spawned,
    plus the current spawn interval plus the last item's delay. This prevents pattern
    overlap even at maximum speed.
-3. A same-lane guard rejects a spawn if an existing obstacle in that lane is within
-   `speed × 0.36` of the top; the item is retried 0.14 s later (up to 10 times).
-4. Obstacles are single-lane, so a safe lane always exists.
-5. Visual variants (normal, pulse, heavy) are cosmetic only.
+3. Same-lane guard: if an existing obstacle in that lane is within `speed × 0.36` of
+   the spawn point, the item is retried 0.14 s later (up to 10 attempts).
+4. One lane per obstacle/pattern item; a safe lane always exists. No pattern blocks
+   both lanes simultaneously.
+5. `single` dominates early; advanced patterns unlock gradually and carry lower
+   weights. Repeating the previous pattern multiplies its weight by 0.25.
+6. Recovery sections create intentional breathing room; they are inserted only when
+   the pending pattern queue is empty.
+7. RNG is seeded (`start(seed)`), enabling deterministic tests and future replay.
+   Visual variants (normal/pulse/heavy) remain cosmetic.
 
-The automated stress test runs five simulated minutes at 60 Hz, checks that no two
-lanes are blocked inside a human reaction window, verifies same-lane spacing, and
-drives a scripted safe-lane bot through 487 obstacles without collision.
+The automated stress test runs five simulated minutes at 60 Hz with a fixed seed,
+checks that no two lanes are blocked inside the 0.24 s reaction window, verifies
+same-lane spacing, confirms all six patterns and four recovery sections appear, and
+drives a scripted safe-lane bot through 470 obstacles without collision.
 
 ---
 
@@ -163,7 +214,7 @@ drives a scripted safe-lane bot through 487 obstacles without collision.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "best_score": 0,
   "stats": {
     "games_played": 0,
@@ -171,7 +222,9 @@ drives a scripted safe-lane bot through 487 obstacles without collision.
     "best_survival_time": 0.0,
     "total_play_time": 0.0,
     "obstacles_avoided": 0,
-    "revives_used": 0
+    "revives_used": 0,
+    "best_combo": 0,
+    "perfect_dodges": 0
   },
   "settings": {
     "sfx": true,
@@ -192,7 +245,17 @@ drives a scripted safe-lane bot through 487 obstacles without collision.
     "last_interstitial_unix": 0,
     "runs_since_interstitial": 0
   },
-  "flags": {"onboarding_seen": false}
+  "flags": {"onboarding_seen": false},
+  "challenges": {
+    "date": "2026-11-03",
+    "set": [ /* three generated challenge definitions */ ],
+    "progress": {
+      "dodges": 0, "perfects": 0, "max_combo": 0,
+      "best_score": 0, "best_survival": 0.0
+    },
+    "completed": [],
+    "total_completed": 0
+  }
 }
 ```
 
@@ -226,7 +289,10 @@ Signals:
 - `skin_changed` → equipped skin updates.
 
 The save is written synchronously on important transitions and on close/pause
-notifications. There is no background thread and no network.
+notifications. Challenge progress is updated in memory and saved on challenge
+completion and run finalization/close. Version 1 saves are merged forward safely:
+missing fields take defaults and JSON number type differences are normalized.
+There is no background thread and no network.
 
 ---
 
@@ -252,7 +318,37 @@ after a validated store transaction.
 
 ---
 
-## 8. Audio
+## 8. Daily challenges
+
+`ChallengeManager` (autoload) implements a local-only daily system.
+
+- The date string (`YYYY-MM-DD`, local time) seeds `ChallengeCatalog.generate()`.
+- The set is always three challenges:
+  1. cumulative dodges;
+  2. cumulative perfect dodges;
+  3. one rotating challenge: max combo, best single-run score, or best single-run
+     survival.
+- Targets/rewards are deterministic for the date; the generated set is stored in the
+  save so a mid-day code update cannot silently change the challenge.
+- Progress fields are updated from gameplay events:
+  - every dodge → dodges + combo/score checks;
+  - every confirmed perfect dodge → perfects + score;
+  - each whole second → best survival;
+  - every score change → best score.
+- On completion the manager **marks and saves completion before emitting**
+  `challenge_completed`; gameplay then adds the reward to the run score. Reloading or
+  replaying the event cannot grant the reward twice.
+- At local midnight (detected on the next menu/gameplay/challenge load) the set and
+  daily progress reset; the lifetime `total_completed` count is preserved.
+- No account, network, paid item or backend is involved. Rewards are score bonuses,
+  not pay-to-win.
+
+UI: dedicated Daily screen (three progress cards/rewards), menu DAILY n/3 button, HUD
+daily chip and completion toast.
+
+---
+
+## 9. Audio
 
 `AudioManager` creates `Music` and `SFX` buses at runtime and routes them to Master.
 
@@ -267,7 +363,7 @@ after a validated store transaction.
 
 ---
 
-## 9. Platform layer
+## 10. Platform layer
 
 `systems/platform/platform.gd` centralizes every OS-specific call:
 
@@ -288,7 +384,7 @@ notches and the Dynamic Island on phones that report a safe area.
 
 ---
 
-## 10. Ads abstraction
+## 11. Ads abstraction
 
 ```
 AdsManager (autoload, policy/owner)
@@ -327,7 +423,7 @@ IDs are in [monetization.md](monetization.md).
 
 ---
 
-## 11. Analytics
+## 12. Analytics
 
 `Analytics` (autoload) validates against an allow-list and writes JSONL:
 
@@ -358,11 +454,12 @@ Events used by the game:
 `session_started`, `session_ended`, `game_started`, `game_over`, `score_reached`,
 `new_record`, `skin_selected`, `rewarded_ad_requested`, `rewarded_ad_completed`,
 `rewarded_ad_failed`, `revive_used`, `analytics_toggled`, `settings_changed`,
-`screen_view`, `interstitial_shown`.
+`screen_view`, `interstitial_shown`, `combo_milestone`, `perfect_dodge`,
+`challenge_completed`.
 
 ---
 
-## 12. Store abstraction
+## 13. Store abstraction
 
 `Monetization` (autoload) catalogs future products:
 
@@ -382,7 +479,7 @@ See [monetization.md](monetization.md) for activation.
 
 ---
 
-## 13. UI architecture
+## 14. UI architecture
 
 - A single generated `Theme` (`assets/theme/ui_theme.tres`) is registered as the
   project theme, so every control inherits the design system.
@@ -405,15 +502,21 @@ See [monetization.md](monetization.md) for activation.
   player, menu preview and skin cards.
 - `ParticleFX` is a custom canvas particle system with additive blending; it avoids
   node-per-particle overhead on mobile.
+- The HUD adds a cached top gradient for readability, combo chip/progress, daily chip,
+  combo-milestone/perfect/challenge/recovery callouts. All callouts are tweened and
+  reset between runs.
+- The Daily screen builds three cards from ChallengeManager data; it does not own a
+  second save system.
 
 All screens support keyboard focus. Android back and `Esc` are handled per screen.
 
 ---
 
-## 14. Extension points
+## 15. Extension points
 
-### Global leaderboard / daily challenge
+### Global leaderboard
 
+Daily challenges are already local; a global leaderboard would still need a server.
 Do not trust client scores. Recommended shape:
 
 1. a server endpoint validates the run (signed session nonce, monotonic timestamps,
@@ -443,14 +546,18 @@ then switch flags. Never fake a transaction and never auto-show an interstitial.
 
 ---
 
-## 15. Performance notes
+## 16. Performance notes
 
 - Fixed 60 Hz physics; no dynamic physics simulation beyond Area2D overlap checks.
 - Custom drawing avoids per-frame allocations in most paths. `Obstacle._draw` creates
   no nodes; StyleBoxes are created once in `_ready`.
 - Particle count is capped and reduced on demand.
 - The spawner keeps only the active obstacles and pending pattern items.
-- The world shake offsets the entire world node rather than every object.
+- Combo/perfect detection scans only the small active obstacle set, on input events.
+- Daily progress writes update the in-memory save; challenge completion triggers an
+  immediate disk save. Per-second survival updates do not write the file.
+- The world shake offsets the entire world node rather than every object; REDUCE
+  EFFECTS disables all shake.
 - Save/analytics files are tiny; analytics writes are line-buffered.
 - Web: Compatibility renderer, no threads, no GDExtension. Initial wasm is large by
   nature of Godot; compression is a hosting concern.

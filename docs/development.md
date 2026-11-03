@@ -145,14 +145,39 @@ disabled until a validated store unlock exists.
 
 ### A new obstacle pattern
 
-In `ObstacleSpawner._spawn_pattern()` add a `match` branch with lane/delay items, add
-it to `Difficulty.allowed_patterns()` at the intended unlock time, and give it a weight
-in `_weighted_choice()`. Rules:
+1. Add the unlock time to `Difficulty.PATTERN_UNLOCKS`.
+2. Add a `match` branch in `ObstacleSpawner._spawn_pattern()` with lane/delay items.
+3. Give it a weight in `_weighted_choice()` (repeat-damping is automatic).
+4. Extend the pattern assertions in `tests/spawner_stress.gd`.
+
+Rules:
 
 - never place two lanes at the same arrival time;
-- leave at least **0.24 s** between opposite-lane arrivals (human switch budget);
-- alternate lanes;
-- test with `SpawnerStress` for five minutes.
+- leave at least **0.24 s** between opposite-lane arrivals (`MIN_REACTION_TIME`);
+- alternate lanes and keep item delays above the human switch budget;
+- account for the spawner's "next pattern after last item + interval" rule;
+- test with `SpawnerStress` for five minutes and ensure the new pattern appears.
+
+### Scoring and perfect-dodge tuning
+
+Edit `scripts/core/scoring.gd` only:
+
+- `MILESTONES` / `MULTIPLIERS` control combo tiers;
+- `PERFECT_MIN_TIME` / `PERFECT_WINDOW` control the timing window;
+- `PERFECT_BONUS` controls the flat perfect reward.
+
+Run `ScoringTest` and `GameplayTest` after any change. Do not add combo from the same
+obstacle twice; perfect rewards are confirmed on the obstacle's `passed` signal.
+
+### A new daily challenge type
+
+1. Add target arrays/description/reward in `ChallengeCatalog`.
+2. Add its progress key to `ChallengeManager`'s progress dictionary and
+   `ChallengeCatalog.progress_value`.
+3. Feed it from a gameplay event in `Gameplay` (or `_process` for time-based types).
+4. Extend `tests/scoring_test.gd` for the catalog and `tests/challenge_test.gd` for
+   progress/duplicate-reward behavior.
+5. Update the Daily screen copy if needed.
 
 ### A new analytics event
 
@@ -204,28 +229,38 @@ in `_weighted_choice()`. Rules:
 
 Runs the real Main scene and asserts:
 
-- menu boots and gameplay loads;
-- spawner is active; HUD exists;
-- an obstacle can be spawned and scores when it passes;
-- collision kills the player and game over appears;
-- restart resets the run, records exactly one game, updates best;
-- pause freezes the spawner; resume restores play;
-- test rewarded ad opens, grants revive, and resumes the run;
-- save reload preserves best;
-- local analytics file exists.
+- menu boots, pointer/keyboard input reaches gameplay;
+- combo increments exactly once per dodge and the exact multiplier totals hold;
+- collision resets combo; restart resets score/combo;
+- perfect dodge marks once, confirms once on pass, and adds the exact bonus;
+- safe/unsafe switch cases and duplicate-switch attempts;
+- pause/resume preserves combo; game over reports max combo;
+- challenge reward integration and duplicate-reward guard;
+- test rewarded ad, save reload, analytics, skins/settings persistence.
+
+### Pure rules (`tests/scoring_test.gd`)
+
+Tests combo tiers/totals, perfect-window configuration, speed/interval caps,
+pattern unlocks, recovery timing and deterministic daily catalog generation.
+
+### Daily challenge persistence (`tests/challenge_test.gd`)
+
+Tests progress, completion, single-reward emission, reload persistence, stale-date
+rollover and preservation of the lifetime completion count.
 
 ### Spawner stress (`tests/spawner_stress.gd`)
 
-Runs 18,000 simulated 60 Hz frames (5 minutes) with a mock container, drives a
-scripted safe-lane bot, and asserts:
+Runs 18,000 simulated 60 Hz frames (5 minutes) with a fixed seed, drives a scripted
+safe-lane bot, and asserts:
 
 - >250 obstacles spawned;
 - active obstacles < 24;
 - no unreactable two-lane block (<0.24 s arrival gap or simultaneous band);
-- bot survives;
-- elapsed time covered.
+- bot survives; elapsed time covered;
+- all six patterns and recovery sections appear;
+- speed respects its ceiling.
 
-Both tests exit non-zero on failure, so they can be used in CI.
+All headless tests exit non-zero on failure, so they can be used in CI.
 
 ### Visual harness
 
@@ -233,17 +268,17 @@ Both tests exit non-zero on failure, so they can be used in CI.
 for manual review. Do not treat it as an automated pixel test; layout/design decisions
 still need human eyes.
 
-### Web smoke test (manual, external to repo)
+### Web smoke test (`tests/web_smoke.mjs`)
 
-A Playwright script can load the export from a local HTTP server and verify:
+A Playwright script loads the export from a local HTTP server and verifies:
 
 - loading overlay hides;
-- menu appears after Play;
-- keyboard input switches lanes;
+- touch PLAY starts gameplay;
+- a playfield tap switches lanes;
 - pause opens;
-- no page errors.
+- no page errors, failed requests or console errors.
 
-This is how the shipped web export was validated; see [testing.md](testing.md).
+This is how the shipped web export is validated; see [testing.md](testing.md).
 
 ---
 

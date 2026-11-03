@@ -12,7 +12,7 @@ signal skin_changed
 const SAVE_PATH := "user://save.json"
 const BACKUP_PATH := "user://save.bak.json"
 const TEMP_PATH := "user://save.tmp"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 var data: Dictionary = {}
 
@@ -39,6 +39,8 @@ func _defaults() -> Dictionary:
 			"total_play_time": 0.0,
 			"obstacles_avoided": 0,
 			"revives_used": 0,
+			"best_combo": 0,
+			"perfect_dodges": 0,
 		},
 		"settings": {
 			"sfx": true,
@@ -61,6 +63,19 @@ func _defaults() -> Dictionary:
 		},
 		"flags": {
 			"onboarding_seen": false,
+		},
+		"challenges": {
+			"date": "",
+			"set": [],
+			"progress": {
+				"dodges": 0,
+				"perfects": 0,
+				"max_combo": 0,
+				"best_score": 0,
+				"best_survival": 0.0,
+			},
+			"completed": [],
+			"total_completed": 0,
 		},
 	}
 
@@ -138,6 +153,8 @@ func _sanitize() -> void:
 	stats["total_play_time"] = maxf(0.0, float(stats.get("total_play_time", 0.0)))
 	stats["obstacles_avoided"] = maxi(0, int(stats.get("obstacles_avoided", 0)))
 	stats["revives_used"] = maxi(0, int(stats.get("revives_used", 0)))
+	stats["best_combo"] = maxi(0, int(stats.get("best_combo", 0)))
+	stats["perfect_dodges"] = maxi(0, int(stats.get("perfect_dodges", 0)))
 	data["best_score"] = maxi(0, int(data.get("best_score", 0)))
 
 	var skins: Dictionary = data.get("skins", {})
@@ -155,6 +172,27 @@ func _sanitize() -> void:
 	ads["last_interstitial_unix"] = maxf(0.0, float(ads.get("last_interstitial_unix", 0)))
 	ads["runs_since_interstitial"] = maxi(0, int(ads.get("runs_since_interstitial", 0)))
 	data["ads"] = ads
+
+	var challenges: Dictionary = data.get("challenges", {})
+	if challenges.get("date") is String:
+		pass
+	else:
+		challenges["date"] = ""
+	if not (challenges.get("set") is Array):
+		challenges["set"] = []
+	if not (challenges.get("completed") is Array):
+		challenges["completed"] = []
+	if not (challenges.get("progress") is Dictionary):
+		challenges["progress"] = {}
+	var progress: Dictionary = challenges["progress"]
+	progress["dodges"] = maxi(0, int(progress.get("dodges", 0)))
+	progress["perfects"] = maxi(0, int(progress.get("perfects", 0)))
+	progress["max_combo"] = maxi(0, int(progress.get("max_combo", 0)))
+	progress["best_score"] = maxi(0, int(progress.get("best_score", 0)))
+	progress["best_survival"] = maxf(0.0, float(progress.get("best_survival", 0.0)))
+	challenges["progress"] = progress
+	challenges["total_completed"] = maxi(0, int(challenges.get("total_completed", 0)))
+	data["challenges"] = challenges
 
 
 func save_now() -> void:
@@ -263,13 +301,16 @@ func unlock_skin(skin_id: String) -> void:
 
 
 ## Records a finished (or abandoned) run. Returns the previous best score.
-func record_run(score: int, duration: float) -> int:
+func record_run(score: int, duration: float, obstacles: int = 0, max_combo: int = 0, perfects: int = 0) -> int:
 	var previous_best := get_best_score()
 	var stats: Dictionary = data["stats"]
 	stats["games_played"] = int(stats["games_played"]) + 1
 	stats["total_score"] = int(stats["total_score"]) + maxi(0, score)
 	stats["best_survival_time"] = maxf(float(stats["best_survival_time"]), maxf(0.0, duration))
 	stats["total_play_time"] = float(stats["total_play_time"]) + maxf(0.0, duration)
+	stats["obstacles_avoided"] = int(stats["obstacles_avoided"]) + maxi(0, obstacles)
+	stats["best_combo"] = maxi(int(stats["best_combo"]), maxi(0, max_combo))
+	stats["perfect_dodges"] = int(stats["perfect_dodges"]) + maxi(0, perfects)
 	data["best_score"] = maxi(previous_best, score)
 
 	var ads: Dictionary = data["ads"]
@@ -292,6 +333,16 @@ func record_interstitial_view() -> void:
 	ads["last_interstitial_unix"] = Time.get_unix_time_from_system()
 	ads["runs_since_interstitial"] = 0
 	save_now()
+
+
+func get_challenge_data() -> Dictionary:
+	return data.get("challenges", {}).duplicate(true)
+
+
+func set_challenge_data(challenge_data: Dictionary, persist: bool = true) -> void:
+	data["challenges"] = challenge_data.duplicate(true)
+	if persist:
+		save_now()
 
 
 func reset_progress() -> void:

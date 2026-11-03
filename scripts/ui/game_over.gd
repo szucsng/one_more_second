@@ -11,6 +11,8 @@ signal continue_pressed
 @onready var score_label: Label = %ScoreLabel
 @onready var best_value: Label = %BestValue
 @onready var time_value: Label = %TimeValue
+@onready var combo_value: Label = %ComboValue
+@onready var perfect_value: Label = %PerfectValue
 @onready var new_record_panel: PanelContainer = %NewRecordPanel
 @onready var continue_button: Button = %ContinueButton
 @onready var ad_caption: Label = %AdCaption
@@ -29,7 +31,7 @@ func _ready() -> void:
 	menu_button.pressed.connect(func() -> void: menu_pressed.emit())
 
 
-func show_result(score: int, best: int, is_record: bool, duration: float, rank: String, can_continue: bool) -> void:
+func show_result(score: int, best: int, is_record: bool, duration: float, rank: String, can_continue: bool, max_combo: int = 0, perfect_dodges: int = 0) -> void:
 	visible = true
 	modulate.a = 0.0
 	panel.scale = Vector2(0.95, 0.95)
@@ -37,6 +39,8 @@ func show_result(score: int, best: int, is_record: bool, duration: float, rank: 
 	rank_label.text = rank
 	best_value.text = GameConfig.format_score(best)
 	time_value.text = GameConfig.format_time(duration)
+	combo_value.text = str(max_combo)
+	perfect_value.text = str(perfect_dodges)
 	score_label.text = "0"
 	_is_record = is_record
 	new_record_panel.visible = is_record

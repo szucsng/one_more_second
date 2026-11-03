@@ -51,6 +51,8 @@ func _fill() -> void:
 		["BEST SURVIVAL", GameConfig.format_time(float(stats.get("best_survival_time", 0.0)))],
 		["TOTAL PLAY TIME", GameConfig.format_time(float(stats.get("total_play_time", 0.0)))],
 		["OBSTACLES AVOIDED", GameConfig.format_score(int(stats.get("obstacles_avoided", 0)))],
+		["BEST COMBO", str(int(stats.get("best_combo", 0)))],
+		["PERFECT DODGES", str(int(stats.get("perfect_dodges", 0)))],
 		["REVIVES USED", str(int(stats.get("revives_used", 0)))],
 		["AVG SCORE / RUN", str(average)],
 		["HIGHEST RANK", GameConfig.rank_for(best)],

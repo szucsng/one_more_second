@@ -9,7 +9,7 @@ config_version=5
 
 config/name="ONE MORE SECOND"
 config/description="A minimalist neon reflex arcade game. Switch lanes, stay alive, and chase one more second."
-config/version="1.0.0"
+config/version="1.1.0"
 run/main_scene="res://scenes/main/Main.tscn"
 run/max_fps=0
 config/features=PackedStringArray("4.7", "GL Compatibility")
@@ -27,6 +27,7 @@ SaveManager="*res://systems/save/save_manager.gd"
 Analytics="*res://systems/analytics/analytics_manager.gd"
 AudioManager="*res://systems/audio/audio_manager.gd"
 SkinManager="*res://systems/skins/skin_manager.gd"
+Challenges="*res://systems/challenges/challenge_manager.gd"
 Ads="*res://systems/ads/ads_manager.gd"
 Monetization="*res://systems/monetization/monetization_manager.gd"
 SceneRouter="*res://scripts/core/scene_router.gd"

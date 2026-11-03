@@ -17,6 +17,8 @@ var lane: int = 0
 var speed: float = 620.0
 var variant: int = 0
 var moving: bool = true
+var perfect_awarded: bool = false
+var perfect_pending: bool = false
 
 var _counted: bool = false
 var _time: float = 0.0

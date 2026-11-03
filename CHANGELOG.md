@@ -3,6 +3,47 @@
 All notable changes to ONE MORE SECOND are documented here.
 Format follows the spirit of Keep a Changelog; versions follow semantic versioning.
 
+## [1.1.0] — 2026-11-03
+
+### Added
+
+- **Combo system:** consecutive dodges build a multiplier at 5/10/20/30
+  (×1→×5), with a HUD combo chip, progress bar, milestone flash, particles and
+  procedural milestone SFX. Combo resets on collision and restart.
+- **Perfect Dodge:** a lane switch within a configurable 0.10–0.28 s impact window
+  marks the narrowly avoided obstacle; the +2 bonus, HUD callout, ring/sparks and
+  sound are confirmed only after the obstacle passes, so late switches that end in
+  a collision never earn the reward. One reward per obstacle.
+- **Seeded obstacle patterns:** deterministic RNG, a `pattern_spawned` signal,
+  repeat-damped pattern selection, new `late_switch` and `gauntlet` patterns, and
+  gradual unlocks (single → stagger → zigzag → late switch → rush → gauntlet).
+- **Recovery pacing:** four configured breathing sections during a long run, with a
+  HUD RECOVERY callout, plus a mild spawn-interval wave.
+- **Daily challenges:** three locally generated, date-seeded challenges per day
+  (dodges, perfect dodges, plus combo/score/survival), cumulative daily progress,
+  date rollover, score-bonus rewards, a new Daily screen, menu badge, HUD daily chip
+  and completion toast. Persisted through the existing SaveManager; no account,
+  network or backend.
+- **Run breakdown:** game-over screen now shows MAX COMBO and PERFECT dodges.
+- **Statistics:** best combo, perfect dodges and now-correct obstacles-avoided
+  counters, plus new procedural reward SFX.
+- **Seeded/spawner tests:** pattern variety and recovery coverage in the five-minute
+  fairness simulation.
+
+### Changed
+
+- Version 1.1.0, Android version code 2, iOS build 2.
+- Rank thresholds adjusted for the new multiplier-based score scale.
+- Screen shake is now fully disabled by the existing REDUCE EFFECTS setting.
+- HUD gained a top readability fade so obstacles never obscure the score.
+
+### Preserved
+
+- No real ads, purchases, external services, identifiers or network calls.
+- Free skins, local save compatibility, settings, platform abstractions and web
+  ad-free policy.
+- Existing 1.0.0 saves are upgraded by merge (new fields default safely).
+
 ## [1.0.0] — 2026-11-03
 
 ### Added

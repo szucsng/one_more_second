@@ -10,6 +10,7 @@ const GAMEPLAY_SCENE := "res://scenes/gameplay/Gameplay.tscn"
 const SETTINGS_SCENE := "res://scenes/settings/Settings.tscn"
 const SKINS_SCENE := "res://scenes/skins/Skins.tscn"
 const STATS_SCENE := "res://scenes/stats/Statistics.tscn"
+const CHALLENGES_SCENE := "res://scenes/challenges/Challenges.tscn"
 
 var _host: Control
 var _current: Node
@@ -62,6 +63,10 @@ func go_skins() -> void:
 
 func go_stats() -> void:
 	change_screen(STATS_SCENE)
+
+
+func go_challenges() -> void:
+	change_screen(CHALLENGES_SCENE)
 
 
 func change_screen(path: String, animate: bool = true) -> void:

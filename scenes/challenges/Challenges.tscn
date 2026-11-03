@@ -1,0 +1,155 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/challenges.gd" id="1_challenges"]
+[ext_resource type="Script" path="res://scripts/ui/backdrop.gd" id="2_backdrop"]
+[ext_resource type="Script" path="res://scripts/ui/neon_button.gd" id="3_neon"]
+
+[node name="Challenges" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_challenges")
+
+[node name="Backdrop" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_backdrop")
+
+[node name="Content" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 76
+theme_override_constants/margin_top = 62
+theme_override_constants/margin_right = 76
+theme_override_constants/margin_bottom = 48
+
+[node name="VBox" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="HBoxContainer" parent="Content/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="BackButton" type="Button" parent="Content/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 84)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"IconButton"
+tooltip_text = "Back"
+text = "<"
+script = ExtResource("3_neon")
+
+[node name="TitleBox" type="VBoxContainer" parent="Content/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Content/VBox/Header/TitleBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HeadingLabel"
+text = "DAILY"
+
+[node name="Subtitle" type="Label" parent="Content/VBox/Header/TitleBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "A NEW SET EVERY DAY"
+
+[node name="HeaderSpacer" type="Control" parent="Content/VBox/Header"]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Gap1" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SummaryPanel" type="PanelContainer" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 238)
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="SummaryBox" type="VBoxContainer" parent="Content/VBox/SummaryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="Kicker" type="Label" parent="Content/VBox/SummaryPanel/SummaryBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"KickerLabel"
+text = "TODAY'S PROGRESS"
+horizontal_alignment = 1
+
+[node name="SummaryValue" type="Label" parent="Content/VBox/SummaryPanel/SummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HugeLabel"
+text = "0 / 3"
+horizontal_alignment = 1
+
+[node name="SummaryCaption" type="Label" parent="Content/VBox/SummaryPanel/SummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"AccentLabel"
+text = "CHALLENGES COMPLETE TODAY"
+horizontal_alignment = 1
+
+[node name="DateLabel" type="Label" parent="Content/VBox/SummaryPanel/SummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "TODAY  •  2026-01-01"
+horizontal_alignment = 1
+
+[node name="Gap2" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Cards" type="VBoxContainer" parent="Content/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Gap3" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Footer" type="Label" parent="Content/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+text = "REWARDS ARE ADDED TO THE RUN SCORE. NO ACCOUNT, NO NETWORK."
+horizontal_alignment = 1
+autowrap_mode = 3

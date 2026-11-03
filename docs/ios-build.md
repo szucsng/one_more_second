@@ -29,7 +29,7 @@ Install the iOS export template from Godot: *Editor → Manage Export Templates*
 
 - bundle identifier: `com.onemoresecond.game` **← change to your owned id before
   first upload**
-- short version: `1.0.0`; build number: `1`
+- short version: `1.1.0`; build number: `2`
 - orientation: portrait via `project.godot`
 - app icons: `assets/icons/ios/icon_*.png` (20–1024 px), including iPad sizes
 - App Store 1024×1024 icon

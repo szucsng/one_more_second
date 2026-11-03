@@ -67,6 +67,22 @@ arrival gaps below ~0.24 s.
 - Only the spawner-created obstacles emit signals; manually added test nodes need the
   connection.
 
+### Combo looks wrong or perfect dodges never trigger
+
+- Combo increments only in `_on_obstacle_passed`, once per obstacle. If a signal is
+  connected twice, check the spawner binding.
+- Perfect dodges require a switch within `Scoring.PERFECT_MIN_TIME` and
+  `Scoring.PERFECT_WINDOW`; the bonus is confirmed only when the obstacle passes.
+- A switch into an obstacle in the new lane is intentionally not rewarded.
+- Use `tests/GameplayTest` and `tests/ScoringTest` before tuning constants.
+
+### Daily challenges reset unexpectedly
+
+- The set is local-date based; changing the device date or time zone can roll it.
+- Clearing app/site data deletes local progress.
+- Challenges are stored in the existing `save.json` under `challenges`; there is no
+  second save file.
+
 ### Player passes through obstacles
 
 - Player: layer 1, mask 2. Obstacle: layer 2, monitorable. Do not set both areas to

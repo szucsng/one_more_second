@@ -5,7 +5,7 @@ Quick platform-by-platform build reference. Detailed guides are linked in each s
 - Engine: **Godot 4.7.2** (standard build)
 - Renderer: **Compatibility** (WebGL2 / OpenGL ES 3)
 - Design canvas: **1080 × 1920**, portrait
-- Version: **1.0.0** (version code `1`)
+- Version: **1.1.0** (Android version code `2`, iOS build `2`)
 - Package / bundle id: **com.onemoresecond.game** (change before store release)
 
 Install the matching **export templates** first:
@@ -28,6 +28,8 @@ export GODOT_BIN="/path/to/Godot_v4.7.2-stable..."
 "$GODOT_BIN" --headless --path . --import
 
 "$GODOT_BIN" --headless --path . res://tests/GameplayTest.tscn
+"$GODOT_BIN" --headless --path . res://tests/ScoringTest.tscn
+"$GODOT_BIN" --headless --path . res://tests/ChallengeTest.tscn
 "$GODOT_BIN" --headless --path . res://tests/SpawnerStress.tscn
 ```
 
@@ -182,6 +184,8 @@ Before a store release, update all of these:
 | `export_presets.cfg` | iOS `application/short_version` |
 | `export_presets.cfg` | iOS `application/version` (build number, must increase) |
 | `CHANGELOG.md` | release notes date/version |
+
+Version 1.1.0 introduces combo/perfect scoring, new patterns and local daily challenges. Save data from 1.0.0 is merged forward automatically.
 
 Android version code is an integer and must strictly increase. iOS build number is a
 string but should also increase.

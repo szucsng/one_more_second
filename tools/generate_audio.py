@@ -157,6 +157,53 @@ def make_sfx() -> None:
     write_wav(SFX_DIR / "heartbeat.wav", buf)
 
 
+def make_feedback_sfx() -> None:
+    """Short reward cues for combos, perfect dodges and daily challenges."""
+    SFX_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Perfect dodge: two bright, quickly decaying partials.
+    n = int(SR * 0.16)
+    buf = []
+    for i in range(n):
+        t = i / SR
+        val = math.sin(TAU * 1760 * t) * 0.55 + math.sin(TAU * 2640 * t) * 0.25
+        val += math.sin(TAU * 3520 * t) * 0.08
+        buf.append(val * env_ad(t, 0.16, 0.002, 0.12) * 0.26)
+    write_wav(SFX_DIR / "perfect_dodge.wav", buf)
+
+    # Combo milestone: compact rising three-step arpeggio.
+    total = 0.36
+    n = int(SR * total)
+    buf = [0.0] * n
+    for idx, freq in enumerate([659.25, 880.0, 1318.51]):
+        start = idx * 0.075
+        length = 0.2
+        for i in range(int(SR * length)):
+            t = i / SR
+            tt = start + t
+            if tt >= total:
+                break
+            tone = math.sin(TAU * freq * t) + 0.3 * math.sin(TAU * freq * 2 * t)
+            buf[int(tt * SR)] += tone * env_ad(t, length, 0.004, 0.12) * 0.12
+    write_wav(SFX_DIR / "combo_milestone.wav", buf)
+
+    # Daily challenge: a small, warm four-note completion chime.
+    total = 0.58
+    n = int(SR * total)
+    buf = [0.0] * n
+    for idx, freq in enumerate([523.25, 659.25, 783.99, 1046.50]):
+        start = idx * 0.09
+        length = 0.3
+        for i in range(int(SR * length)):
+            t = i / SR
+            tt = start + t
+            if tt >= total:
+                break
+            tone = math.sin(TAU * freq * t) + 0.2 * math.sin(TAU * freq * 2 * t)
+            buf[int(tt * SR)] += tone * env_ad(t, length, 0.005, 0.16) * 0.095
+    write_wav(SFX_DIR / "challenge_complete.wav", buf)
+
+
 def make_music() -> None:
     MUSIC_DIR.mkdir(parents=True, exist_ok=True)
     bpm = 100.0
@@ -298,5 +345,6 @@ def make_music() -> None:
 
 if __name__ == "__main__":
     make_sfx()
+    make_feedback_sfx()
     make_music()
     print("audio generated")

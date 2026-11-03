@@ -6,13 +6,20 @@ All test assets are excluded from web/mobile exports.
 
 ```bash
 godot --headless --path . res://tests/GameplayTest.tscn
+godot --headless --path . res://tests/ScoringTest.tscn
+godot --headless --path . res://tests/ChallengeTest.tscn
 godot --headless --path . res://tests/SpawnerStress.tscn
 ```
 
-- `GameplayTest` boots the real app and verifies input, scoring, collision, game over,
-  restart, pause, revive, save persistence and local analytics.
-- `SpawnerStress` simulates five minutes at 60 Hz and asserts pattern fairness,
-  spacing and a bounded active set.
+- `GameplayTest` boots the real app and verifies input, combo multipliers,
+  one-per-obstacle perfect dodges, collision/reset, game over, restart, pause, revive,
+  challenge reward/duplicate guard, save persistence and local analytics.
+- `ScoringTest` unit-tests combo tiers, perfect timing configuration, difficulty limits,
+  pattern unlocks and the deterministic daily challenge catalog.
+- `ChallengeTest` verifies daily progress, date rollover, save persistence and that a
+  completed challenge cannot reward twice.
+- `SpawnerStress` simulates five minutes at 60 Hz with a seed and asserts pattern
+  variety, recovery sections, spacing and a bounded active set.
 
 ## Visual QA
 

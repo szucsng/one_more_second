@@ -3,10 +3,10 @@
 **A minimalist neon reflex arcade game. Two lanes. One tap. Stay alive.**
 
 <p align="center">
-  <img src="docs/screenshots/menu.png" width="240" alt="Main menu">
-  <img src="docs/screenshots/gameplay.png" width="240" alt="Gameplay">
-  <img src="docs/screenshots/game-over.png" width="240" alt="Game over">
-  <img src="docs/screenshots/skins.png" width="240" alt="Skins">
+  <img src="docs/screenshots/menu.png" width="230" alt="Main menu">
+  <img src="docs/screenshots/gameplay.png" width="230" alt="Gameplay with combo HUD">
+  <img src="docs/screenshots/challenges.png" width="230" alt="Daily challenges">
+  <img src="docs/screenshots/game-over.png" width="230" alt="Game over">
 </p>
 
 ONE MORE SECOND is a portrait endless runner built in **Godot 4.7.2** with GDScript.
@@ -40,10 +40,23 @@ analytics facade, and deliberately inactive monetization hooks.
 
 ### Core game
 - Two-lane, one-input reflex gameplay with forgiving hitboxes.
-- Pattern-based obstacle generator with a five-minute-proven fairness envelope.
-- Smooth difficulty ramp: speed, spawn cadence and pattern variety all scale.
-- Score per obstacle, live HUD, personal best, run rank, survival time.
-- Screen shake, hit flashes, particles, tapered ship trail, lane sparks.
+- **Combo multiplier** at 5/10/20/30 dodges (×1–×5), with a live HUD combo bar,
+  milestone flashes and reset-on-collision.
+- **Perfect Dodge** skill mechanic: narrowly switching away from an obstacle within a
+  configurable 100–280 ms impact window awards +2 points, confirmed only after the
+  obstacle actually passes. One reward per obstacle, never for an unsafe switch.
+- Pattern-based obstacle generator with six patterns (single, stagger, zigzag,
+  late switch, rush, gauntlet), seeded randomness, repeat damping and a
+  five-minute-proven fairness envelope.
+- Four recovery sections during a long run, plus a subtle spawn-cadence wave, so the
+  pressure curve has texture instead of a flat ramp.
+- Score per obstacle scaled by combo, live HUD, personal best, run rank and survival
+  time.
+- **Local daily challenges**: three date-seeded challenges per day (dodges, perfect
+  dodges, plus combo/score/survival), cumulative progress, score rewards and a
+  dedicated Daily screen. No account or network.
+- Screen shake, hit flashes, particles, tapered ship trail, lane sparks, perfect
+  rings and challenge toasts. Screen shake follows the REDUCE EFFECTS setting.
 - Pause/resume, restart, menu transition, auto-save.
 - Frame-rate independent movement; designed for 60 FPS and low-end devices.
 - Reduced-effects mode for weaker hardware or motion sensitivity.
@@ -53,7 +66,7 @@ analytics facade, and deliberately inactive monetization hooks.
 - Five free skins (Default Neon, Cyan, Violet Shift, Hot Signal, Gold Rush).
 - Three premium skins prepared but **not purchasable** in v1.
 - Local statistics: best score, runs, total score, best/total play time, obstacles
-  avoided, revives, average score, highest rank.
+  avoided, best combo, perfect dodges, revives, average score, highest rank.
 - Settings: SFX, music, master volume, vibration (mobile), reduced effects, fullscreen
   (web/desktop), local analytics, reset progress.
 - Local JSON save with backup rotation and corruption recovery.
@@ -72,12 +85,17 @@ analytics facade, and deliberately inactive monetization hooks.
 - Typed GDScript, central palette/design system, reusable theme generated from code.
 - No paid or third-party game assets. Fonts are OFL; all art and audio are generated
   procedurally by scripts in `tools/`.
-- Headless integration tests and a five-minute spawner stress test.
+- Headless integration tests, pure scoring/challenge tests and a five-minute
+  spawner fairness stress test.
 - CI workflow that builds and deploys the web version to GitHub Pages.
 
 ---
 
 ## Screens
+
+| Gameplay | Daily challenges |
+| --- | --- |
+| ![Gameplay](docs/screenshots/gameplay.png) | ![Daily challenges](docs/screenshots/challenges.png) |
 
 | Menu | Game over |
 | --- | --- |
@@ -115,10 +133,12 @@ godot --path .            # run
 ```bash
 godot --headless --path . --import
 godot --headless --path . res://tests/GameplayTest.tscn
+godot --headless --path . res://tests/ScoringTest.tscn
+godot --headless --path . res://tests/ChallengeTest.tscn
 godot --headless --path . res://tests/SpawnerStress.tscn
 ```
 
-Both tests print `PASS (0 failures)` and exit non-zero on failure.
+All tests print `PASS (0 failures)` and exit non-zero on failure.
 
 ### Build the web version
 
@@ -166,6 +186,7 @@ one_more_second/
 │   ├── settings/
 │   ├── skins/
 │   ├── stats/
+│   ├── challenges/            # Local daily challenges
 │   └── components/            # Reusable toggle, test ad overlay
 ├── scripts/
 │   ├── core/                  # Palette, config, difficulty, router, app shell
@@ -208,7 +229,7 @@ one_more_second/
 - **GitHub Actions:** `.github/workflows/deploy-web.yml` builds and publishes the web
   game to GitHub Pages on every push to `main`/`master` (or manually).
 
-Version 1.0.0 uses Godot **4.7.2**. Export templates must match the editor version
+Version 1.1.0 uses Godot **4.7.2**. Export templates must match the editor version
 exactly. The project uses the **Compatibility** renderer for broad web/mobile support.
 
 ---
@@ -253,10 +274,17 @@ See [docs/privacy.md](docs/privacy.md).
 Verified in this build:
 
 - Godot 4.7.2 project import with zero parse errors.
-- Headless gameplay integration test: boot, scoring, collision, game over, restart,
-  pause/resume, rewarded revive, save round-trip, analytics file.
-- Headless five-minute spawner stress test: 487 obstacles, bounded active set, zero
-  unreactable two-lane overlaps, scripted safe-lane bot survives.
+- Headless gameplay integration test (51 assertions): boot, input, exact combo
+  multipliers, one-per-obstacle perfect dodges, collision/reset, restart,
+  pause/resume, challenge reward and duplicate guard, rewarded revive, save
+  round-trip and analytics.
+- Pure scoring/difficulty/daily-catalog test (57 assertions) and challenge
+  persistence/rollover test (14 assertions).
+- Headless five-minute spawner stress test (14 assertions): 470 obstacles, six
+  patterns, four recovery sections, bounded active set, zero unreactable two-lane
+  overlaps, scripted safe-lane bot survives.
+- Native visual review of every screen at 1080×1920, including combo HUD, challenge
+  screen, perfect-dodge feedback and challenge toast.
 - Native visual review of every screen at 1080×1920 (macOS, Compatibility renderer).
 - Web export loaded from a local HTTP server in headless Chrome (WebGL2): menu,
   mouse/touch/keyboard input, Play, pause, no console/page errors.
@@ -283,6 +311,10 @@ Exact test matrix and evidence: [docs/testing.md](docs/testing.md).
 - Web audio starts after the first user interaction (browser policy).
 - The web build has no ads; the test ad is available only on desktop/native QA.
 - Real store/ads plugins are intentionally absent from v1.
+- Combo scoring changes the score scale (old records remain valid but are easier to
+  beat); this is intentional in 1.1.0.
+- Daily challenge progress is stored locally per date; changing device time or
+  clearing site/app data changes the local set/progress.
 - Cloud saves, global leaderboards and daily challenges are future work; the
   architecture leaves room for them but no backend exists.
 

@@ -22,7 +22,7 @@ Output:
 exports/web/
 ├── index.html                    custom shell
 ├── index.js
-├── index.pck                     game data (~2.1 MB)
+├── index.pck                     game data (~2.2 MB)
 ├── index.wasm                    engine (~38 MB uncompressed)
 ├── index.audio.worklet.js
 ├── index.audio.position.worklet.js
@@ -32,7 +32,7 @@ exports/web/
 exports/one-more-second-web.zip  itch.io upload
 ```
 
-Typical transfer size with gzip: **~10 MB wasm + ~1.5 MB pck**. Enable compression
+Typical transfer size with gzip: **~10 MB wasm + ~1.5 MB pck**; the itch ZIP is ~12 MB. Enable compression
 on the host. There is no CDN dependency in the game.
 
 Manual equivalent:
@@ -174,7 +174,7 @@ requires them.
 Because Godot outputs fixed filenames, a cached `index.wasm` can pair with a new
 `index.pck` and break. Recommended:
 
-- deploy to `/releases/1.0.0/` and point the homepage link at the new folder;
+- deploy to `/releases/1.1.0/` and point the homepage link at the new folder;
 - or purge the CDN on deploy;
 - or keep `index.html` and `index.js` `no-cache` and use short wasm/pck TTLs.
 

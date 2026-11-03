@@ -6,7 +6,7 @@ Use this before every public build. Check only what was actually done.
 
 ## 0. Scope and approvals
 
-- [ ] Owner approved the release scope (v1.0.0: no real ads, no purchases).
+- [ ] Owner approved the release scope (v1.1.0: no real ads, no purchases).
 - [ ] No paid service, store submission or publishing action was performed without
       explicit owner approval.
 - [ ] Package/bundle id, app name and support contact are final.
@@ -17,14 +17,14 @@ Use this before every public build. Check only what was actually done.
 
 ## 1. Versioning
 
-- [ ] `project.godot` → `application/config/version` updated.
+- [ ] `project.godot` → `application/config/version` updated (1.1.0).
 - [ ] `scripts/core/game_config.gd` → `VERSION` updated.
-- [ ] Android `version/code` increased (integer).
+- [ ] Android `version/code` increased (integer; 1.1.0 = 2).
 - [ ] Android `version/name` updated.
 - [ ] iOS `application/short_version` updated.
-- [ ] iOS `application/version` (build) increased.
+- [ ] iOS `application/version` (build) increased (1.1.0 = 2).
 - [ ] `CHANGELOG.md` updated.
-- [ ] Git tag prepared (e.g. `v1.0.0`).
+- [ ] Git tag prepared (e.g. `v1.1.0`).
 
 ## 2. Code and content freeze
 
@@ -54,6 +54,10 @@ Use this before every public build. Check only what was actually done.
 - [ ] Fullscreen toggle works (desktop/web where supported).
 - [ ] Pause/resume, restart, menu.
 - [ ] Collision, game over, NEW RECORD, best score.
+- [ ] Combo tiers at 5/10/20/30, exact multiplier totals, reset on collision/restart.
+- [ ] Perfect dodge awards once per obstacle; late/fatal switches do not award.
+- [ ] Daily screen, date-seeded set, progress and reward integration.
+- [ ] Completing a challenge cannot reward twice; date rollover preserves lifetime count.
 - [ ] Reset progress (two-step) behaves as documented.
 - [ ] Keyboard-only navigation works.
 - [ ] Window resize/letterboxing looks correct.

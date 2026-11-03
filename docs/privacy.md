@@ -1,6 +1,6 @@
 # Privacy
 
-**Summary: v1.0.0 makes no network requests, collects no personal data and stores
+**Summary: v1.1.0 makes no network requests, collects no personal data and stores
 everything locally on the player's device.**
 
 This document describes the current build. It is not legal advice; adapt it to your
@@ -18,12 +18,15 @@ jurisdiction and distribution stores before release.
 | Skin selection / unlocked skins | Cosmetics | `user://save.json` |
 | Ad counters / last interstitial timestamp | Frequency limiting (future ads) | `user://save.json` |
 | Local analytics events | Local QA/product insight | `user://analytics/events-*.jsonl` |
+| Daily challenge set/progress/completions | Local replayability | `user://save.json` |
 
 - No name, email, phone, address, precise location, contacts, photos, microphone,
   camera, advertising identifier or payment data is collected.
 - The random `session` id is generated per app launch and stored only inside local
   analytics lines. It is not a device fingerprint and is not transmitted.
 - No cloud sync or account exists in v1.
+- Daily challenges are generated from the local date and stored only in the local
+  save; changing the device date changes the local set.
 - Web saves use the browser's IndexedDB for the game origin. Native saves live in the
   app's sandbox.
 

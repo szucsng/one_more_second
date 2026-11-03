@@ -9,6 +9,8 @@ const PLAYER_Y := 1470.0
 
 var failures: int = 0
 var total_spawned: int = 0
+var patterns_seen: Dictionary = {}
+var recovery_count: int = 0
 
 
 func _ready() -> void:
@@ -28,13 +30,15 @@ func _run() -> void:
 	world.add_child(spawner)
 	await get_tree().process_frame
 	spawner.set_process(false)
-	spawner.start()
+	spawner.obstacle_spawned.connect(_count_spawn)
+	spawner.pattern_spawned.connect(_count_pattern)
+	spawner.recovery_started.connect(_count_recovery)
+	spawner.start(20261103)
 
 	var max_active := 0
 	var collisions := 0
 	var unfair_frames := 0
 	var bot_lane := 0
-	spawner.obstacle_spawned.connect(_count_spawn)
 
 	for step in STEPS:
 		spawner.call("_process", DT)
@@ -83,11 +87,24 @@ func _run() -> void:
 	_check(unfair_frames == 0, "no unreactable two-lane blocks (%d frames)" % unfair_frames)
 	_check(collisions == 0, "scripted safe-lane bot survives without collisions (%d)" % collisions)
 	_check(spawner.elapsed >= 295.0, "simulation covered the full five minutes")
+	_check(spawner.speed <= Difficulty.MAX_SPEED + 0.1, "speed respects the configured ceiling")
+	_check(recovery_count >= 2, "recovery sections occur during a long run (%d)" % recovery_count)
+	_check(patterns_seen.size() >= 5, "multiple pattern types appear (%d)" % patterns_seen.size())
+	for pattern in ["single", "stagger", "zigzag", "late_switch", "rush", "gauntlet"]:
+		_check(patterns_seen.has(pattern), "pattern '%s' is generated" % pattern)
 
 
 func _count_spawn(obstacle: Obstacle) -> void:
 	total_spawned += 1
 	obstacle.set_process(false)
+
+
+func _count_pattern(pattern: String, _item_count: int) -> void:
+	patterns_seen[pattern] = true
+
+
+func _count_recovery() -> void:
+	recovery_count += 1
 
 
 func _check(condition: bool, message: String) -> void:

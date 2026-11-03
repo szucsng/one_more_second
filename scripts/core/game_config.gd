@@ -3,7 +3,7 @@ extends RefCounted
 ## Tunable, gameplay-wide constants. Values are in the 1080x1920 design space.
 
 const GAME_NAME := "ONE MORE SECOND"
-const VERSION := "1.0.0"
+const VERSION := "1.1.0"
 const BASE_WIDTH := 1080.0
 const BASE_HEIGHT := 1920.0
 const DESIGN_FPS := 60
@@ -22,11 +22,11 @@ const SAVE_BACKUP_PATH := "user://save.bak.json"
 const ANALYTICS_DIR := "user://analytics"
 
 const RANK_THRESHOLDS := [
-	{"score": 90, "title": "UNREAL"},
-	{"score": 55, "title": "MACHINE"},
-	{"score": 30, "title": "SHARP"},
-	{"score": 15, "title": "REFLEX"},
-	{"score": 5, "title": "WARMED UP"},
+	{"score": 220, "title": "UNREAL"},
+	{"score": 120, "title": "MACHINE"},
+	{"score": 60, "title": "SHARP"},
+	{"score": 30, "title": "REFLEX"},
+	{"score": 10, "title": "WARMED UP"},
 	{"score": 0, "title": "ROOKIE"},
 ]
 

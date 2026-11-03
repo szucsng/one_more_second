@@ -65,12 +65,12 @@ In `project.godot`:
 - Compatibility renderer for broad device support
 - `application/config/quit_on_go_back = false` → in-game back handling
 - app name: `ONE MORE SECOND`
-- version: `1.0.0`
+- version: `1.1.0`
 
 In `export_presets.cfg` (Android preset):
 
 - package/unique name: `com.onemoresecond.game` **← change to your owned domain**
-- version code `1`, version name `1.0.0`
+- version code `2`, version name `1.1.0`
 - immersive mode enabled
 - arm64-v8a enabled; 32-bit/x86 disabled for a smaller store build
   - enable `armeabi-v7a` only if you really need older 32-bit devices;
@@ -181,7 +181,7 @@ current instructions.
 ### Version codes
 
 `export_presets.cfg` → Android `version/code` must increase for **every** store
-upload. `version/name` is the player-visible version. Update both, plus
+upload (1.1.0 uses code `2`). `version/name` is the player-visible version. Update both, plus
 `project.godot` and `GameConfig.VERSION`.
 
 ---

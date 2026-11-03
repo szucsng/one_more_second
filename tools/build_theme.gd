@@ -250,7 +250,7 @@ func _init() -> void:
 	theme.set_stylebox("panel", "PanelContainer", card_panel)
 	theme.set_stylebox("panel", "Panel", card_panel)
 
-	var chip_panel := _box(Palette.with_alpha(Palette.SURFACE, 0.9), Palette.with_alpha(Palette.CYAN, 0.22), 1, 999)
+	var chip_panel := _box(Palette.with_alpha(Palette.SURFACE, 0.96), Palette.with_alpha(Palette.CYAN, 0.22), 1, 999)
 	chip_panel.content_margin_left = 22
 	chip_panel.content_margin_right = 22
 	chip_panel.content_margin_top = 8

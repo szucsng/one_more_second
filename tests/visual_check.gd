@@ -41,19 +41,40 @@ func _ready() -> void:
 
 	SceneRouter.go_menu()
 	await _wait(0.6)
+	SceneRouter.go_challenges()
+	await _wait(0.8)
+	await _shot("05_challenges")
+
+	SceneRouter.go_menu()
+	await _wait(0.6)
 	SceneRouter.go_gameplay()
 	await _wait(2.2)
-	await _shot("05_gameplay")
-
 	var gameplay := SceneRouter.get_current_screen()
 	if gameplay != null:
 		gameplay.set("score", 12)
+		gameplay.set("combo", 7)
+		gameplay.set("max_combo", 7)
 		var hud := gameplay.get_node_or_null("%HUD")
 		if hud != null:
 			hud.call("set_score", 12, false)
+			hud.call("set_combo", 7, Scoring.multiplier_for(7), Scoring.combo_progress(7))
+			hud.call("flash_combo_milestone", 5, 2)
+			hud.call("show_perfect_dodge", 2)
+	await _wait(0.35)
+	await _shot("06_gameplay_combo")
+	if gameplay != null:
+		var hud_feedback := gameplay.get_node_or_null("%HUD")
+		if hud_feedback != null:
+			hud_feedback.call("show_challenge_complete", "CLEAN SWEEP", 20)
+	await _wait(0.35)
+	await _shot("06b_challenge_toast")
+
+	if gameplay != null:
+		gameplay.set("max_combo", 12)
+		gameplay.set("perfect_dodges", 3)
 		gameplay.call("pause_game")
 		await _wait(0.6)
-		await _shot("06_pause")
+		await _shot("07_pause")
 		gameplay.call("resume_game")
 		await _wait(1.4)
 
@@ -61,13 +82,13 @@ func _ready() -> void:
 		if player != null:
 			player.call("kill")
 			await _wait(1.4)
-			await _shot("07_game_over")
+			await _shot("08_game_over")
 
 		var game_over := gameplay.get_node_or_null("%GameOver")
 		if game_over != null:
 			game_over.emit_signal("continue_pressed")
 			await _wait(0.7)
-			await _shot("08_test_ad")
+			await _shot("09_test_ad")
 			var overlay := _find_test_ad(get_tree().root)
 			if overlay != null:
 				overlay.call("_on_close")

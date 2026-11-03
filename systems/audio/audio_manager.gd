@@ -13,6 +13,9 @@ const SFX_PATHS := {
 	"revive": "res://assets/sounds/revive.wav",
 	"pause": "res://assets/sounds/pause.wav",
 	"heartbeat": "res://assets/sounds/heartbeat.wav",
+	"perfect_dodge": "res://assets/sounds/perfect_dodge.wav",
+	"combo_milestone": "res://assets/sounds/combo_milestone.wav",
+	"challenge_complete": "res://assets/sounds/challenge_complete.wav",
 }
 const MUSIC_PATH := "res://assets/music/neon_drive.ogg"
 const SFX_POOL_SIZE := 10

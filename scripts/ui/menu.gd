@@ -6,6 +6,7 @@ extends Control
 @onready var best_value: Label = %BestValue
 @onready var play_button: Button = %PlayButton
 @onready var skins_button: Button = %SkinsButton
+@onready var challenges_button: Button = %ChallengesButton
 @onready var stats_button: Button = %StatsButton
 @onready var settings_button: Button = %SettingsButton
 @onready var sound_button: Button = %SoundButton
@@ -19,12 +20,15 @@ func _ready() -> void:
 	Platform.apply_safe_margins(content, 96, 72, 96, 64)
 	version_label.text = "v%s" % GameConfig.VERSION
 	support_button.visible = not GameConfig.SUPPORT_URL.is_empty()
+	Challenges.refresh_daily()
 	_refresh_best()
 	_refresh_sound_label()
 	_refresh_ship()
+	_refresh_daily()
 
 	play_button.pressed.connect(_on_play)
 	skins_button.pressed.connect(func() -> void: SceneRouter.go_skins())
+	challenges_button.pressed.connect(func() -> void: SceneRouter.go_challenges())
 	stats_button.pressed.connect(func() -> void: SceneRouter.go_stats())
 	settings_button.pressed.connect(func() -> void: SceneRouter.go_settings())
 	sound_button.pressed.connect(_on_sound_toggle)
@@ -33,6 +37,7 @@ func _ready() -> void:
 	SaveManager.progress_changed.connect(_refresh_best)
 	SaveManager.settings_changed.connect(_refresh_sound_label)
 	SkinManager.skin_changed.connect(func(_id: String) -> void: _refresh_ship())
+	Challenges.progress_changed.connect(_refresh_daily)
 
 	_animate_in()
 	play_button.grab_focus.call_deferred()
@@ -45,6 +50,10 @@ func _notification(what: int) -> void:
 
 func _refresh_best() -> void:
 	best_value.text = GameConfig.format_score(SaveManager.get_best_score())
+
+
+func _refresh_daily() -> void:
+	challenges_button.text = "DAILY %d/%d" % [Challenges.get_completed_count(), Challenges.get_total_count()]
 
 
 func _refresh_ship() -> void:

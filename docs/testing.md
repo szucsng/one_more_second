@@ -1,9 +1,10 @@
-# Testing & Verification
+# Testing & Verification — v1.1.0
 
 Test date: **2026-11-03**
 Engine: **Godot 4.7.2 stable** (`ed1daf0bf`)
-Platform used for verification: Apple Silicon macOS, Compatibility renderer.
-Web browser used: headless Chromium via Playwright with system Chrome, WebGL2.
+Platform: Apple Silicon macOS, Compatibility renderer.
+Web browser: headless Chromium via Playwright (system Chrome), WebGL2, mobile
+emulation.
 
 This document separates what was actually executed from what still requires owner
 hardware, accounts or store setup.
@@ -18,80 +19,85 @@ hardware, accounts or store setup.
 godot --headless --path . --import
 ```
 
-Result: **pass**. Assets imported, no GDScript parse errors. Godot's normal
-`ObjectDB instances leaked at exit` warning appears after headless test quits; it does
-not appear during normal gameplay and is an engine shutdown artifact of the test tree.
+Result: **pass**, no GDScript parse errors. The usual Godot headless shutdown warning
+about lingering ObjectDB/resources appears after tests quit; it does not occur during
+normal gameplay.
 
-### 1.2 Gameplay integration
+### 1.2 Gameplay integration — 51 assertions PASS
 
 ```bash
 godot --headless --path . res://tests/GameplayTest.tscn
 ```
 
-Result: **PASS (0 failures)**, 31 assertions:
+Result: **PASS (0 failures)**. Covers:
 
-1. menu screen boots
-2. gameplay screen loads
-3. spawner running
-4. player alive at start
-5. HUD present
-6. touch tap switches lanes (real pointer event through the UI layer)
-7. mouse click switches lanes
-8. obstacle spawns
-9. passing an obstacle scores a point
-10. collision kills the player
-11. game over overlay appears
-12. state is GAME_OVER
-13. restart resets score
-14. restart revives player
-15. restart records exactly one game
-16. best score updated
-17. save file exists
-18. pause sets PAUSED
-19. spawner freezes while paused
-20. resume returns to RUNNING
-21. second game over shows
-22. test rewarded overlay opens
-23. revive consumed
-24. game continues after reward
-25. player revived
-26. best score survives save reload
-27. local analytics log written
-28. alternate skin selects
-29. selected skin stored
-30. selected skin survives reload
-31. volume survives reload
+- menu/gameplay boot, real pointer input, HUD presence;
+- first dodge = 1 point; combo starts and increments **exactly once** per obstacle;
+- ten-dodge sequence produces the expected **17 points**:
+  `1+1+1+1+2 + 2+2+2+2+3`;
+- combo reaches 10, max combo tracks the peak, HUD combo chip is visible;
+- collision resets combo; restart resets score/combo and records one run;
+- perfect dodge is marked on a narrow switch, confirmed once on pass, awards exactly
+  +2 + the normal obstacle points, never duplicates across repeated switches, and a
+  repeated award call is blocked;
+- a safe switch without danger does not award a perfect dodge;
+- pause/resume preserves combo; death clears it; game over reports max combo;
+- rewarded test ad revive works;
+- save reload preserves best score, skin and volume;
+- a completed challenge adds its reward to the run score exactly once, and a second
+  event does not reward again;
+- local analytics file exists.
 
-The test runs against the real `Main.tscn` and real save layer, not mocks.
+The test isolates daily challenges (marks the current set complete) and restores the
+player's original challenge snapshot afterwards.
 
-### 1.3 Five-minute spawner stress
+### 1.3 Scoring / difficulty / catalog — 57 assertions PASS
+
+```bash
+godot --headless --path . res://tests/ScoringTest.tscn
+```
+
+Result: **PASS (0 failures)**. Covers:
+
+- multiplier tiers 1/2/3/4/5 at the 0/5/10/20/30 boundaries, cap at ×5;
+- ten-dodge score total, perfect-window ordering and speed-scaled distance;
+- monotonic speed curve, configured speed ceiling and spawn-interval floor;
+- gradual pattern unlocks (single → stagger → zigzag → gauntlet);
+- recovery timing bounds;
+- deterministic daily set generation, three unique types, rewards/descriptions,
+  progress/ratio/is-met helpers.
+
+### 1.4 Daily challenge persistence — 14 assertions PASS
+
+```bash
+godot --headless --path . res://tests/ChallengeTest.tscn
+```
+
+Result: **PASS (0 failures)**. Covers:
+
+- three challenges load, clean progress;
+- dodge challenge completes at its target and emits **one** reward;
+- recording another event does not reward the completed challenge twice;
+- completion persists through save reload;
+- a stale date rolls to today, clears daily completion/progress and preserves the
+  lifetime completed count;
+- challenge progress values/ratios are exposed to the UI.
+
+### 1.5 Five-minute spawner stress — 14 assertions PASS
 
 ```bash
 godot --headless --path . res://tests/SpawnerStress.tscn
 ```
 
-Result: **PASS (0 failures)**:
+Result: **PASS (0 failures)** with seed `20261103`:
 
-- 487 obstacles spawned across 5 simulated minutes at 60 Hz.
-- Maximum simultaneous active obstacles: **5**.
-- Unreactable two-lane blocks: **0 frames**.
-  - Checked for simultaneous lane blocks and opposite-lane arrivals closer than
-    **0.24 s**, the human lane-switch budget.
-- Scripted safe-lane bot collisions: **0**.
-- Full duration covered.
-
-This validates the fairness guarantee of the pattern scheduler at every difficulty
-tier, not just the early game.
-
-### 1.4 Save compatibility
-
-Covered inside the gameplay test:
-
-- write → parse verification → backup → atomic rename;
-- JSON float/int merge handling;
-- reload preserves best score;
-- corrupt/unreadable primary falls back to backup (logic exists; corruption path is
-  manually testable by editing `save.json`).
+- 470 obstacles over 5 simulated minutes;
+- six pattern types generated: single, stagger, zigzag, late switch, rush, gauntlet;
+- four recovery sections;
+- speed respects the 1500 ceiling;
+- maximum simultaneous active obstacles: 4;
+- zero unreactable two-lane blocks (0.24 s arrival-gap invariant);
+- scripted safe-lane bot survives with zero collisions.
 
 ---
 
@@ -107,33 +113,30 @@ Screens reviewed at 1080×1920:
 
 | Screen | Result |
 | --- | --- |
-| Main menu (title, best, ship preview, buttons) | pass |
-| Settings (all rows, volume, reset) | pass |
-| Skins (preview, grid, equipped/locked states, scrolling) | pass |
-| Statistics (hero + eight cards) | pass |
-| Gameplay (HUD, lanes, obstacle, player, hint) | pass |
-| Pause overlay | pass |
-| Game over with NEW RECORD, stats, ad prompt, buttons | pass |
+| Main menu with DAILY badge / three nav buttons | pass |
+| Settings | pass |
+| Skins | pass |
+| Statistics (10 cards incl. best combo/perfects) | pass |
+| Daily challenges (summary, 3 cards, progress bars, rewards) | pass |
+| Gameplay HUD (score, top fade, combo chip/bar, daily progress, perfect callout) | pass |
+| Pause | pass |
+| Game over (4-stat row: best, survived, max combo, perfects) | pass |
 | Simulated test ad | pass |
 
-Fixed during QA:
+Design fixes/checks during this update:
 
-- Audiowide's slashed zero looked wrong for scores → numeric display uses Rajdhani
-  Bold while branding stays Audiowide.
-- Statistics cards overlapped because a container child was position-animated →
-  animation only changes alpha; equal-width grid columns.
-- Skins header overflowed horizontally on 1080 px → shortened subtitle/count layout.
-- Skin cards showed duplicate “COMING SOON” labels → single status label + dim.
-- Menu felt empty between logo and play → animated equipped-ship preview.
-- Duplicate game-over audio cue removed.
-- Revive now eases the spawner clock, not the gameplay survival timer.
+- added a 430 px top readability fade so falling obstacles cannot obscure the score;
+- made the combo chip opaque enough to stay readable over bright obstacles;
+- verified combo milestone, perfect callout and daily-toast layering does not overlap;
+- verified 4-column game-over stats fit at 920 px panel width;
+- verified statistics still fit after adding two cards.
 
-Mobile safe-area code is present but cannot be visually verified without a notched
-physical device.
+Mobile safe-area code remains present but physical notched-device verification is
+still required.
 
 ---
 
-## 3. Web verification
+## 3. Web verification — v1.1.0
 
 Build:
 
@@ -141,47 +144,29 @@ Build:
 ./tools/build_web.sh
 ```
 
-Served with:
-
-```bash
-python3 -m http.server 8765 --bind 127.0.0.1 --directory exports/web
-```
-
-Smoke test (`tests/web_smoke.mjs`, Playwright, system Chrome, headless, mobile emulation):
-
-- page title: `ONE MORE SECOND`;
-- loading overlay hidden after the WASM/PCK loaded;
-- WebGL2 compatibility renderer initialized;
-- menu rendered;
-- clicked PLAY → gameplay;
-- keyboard `Space` handled;
-- `Esc` opened pause;
-- **0 page errors, 0 failed requests, 0 console errors**
-  (only expected WebGL `ReadPixels` performance warnings from headless Chrome).
-- Mobile emulation (390×844, `hasTouch`, `isMobile`): menu rendered in a centered
-  portrait letterbox; PLAY worked by touch; a playfield tap moved the ship from the
-  left to the right lane (single switch, no double-event jitter); pause opened by
-  touch; no console errors.
-- Settings persistence across a page reload was verified through IndexedDB
-  (`/userfs` → `save.json`). The web filesystem commits asynchronously; in headless
-  Chrome the IDB copy updated roughly 1 s after the setting change. Give the page a
-  moment before closing it immediately after a change. Native saves are synchronous.
-
-The web input test caught a real bug: the full-screen `Main`/`Gameplay` root
-`Control`s were swallowing unhandled mouse/touch events, so only keyboard switching
-worked. Both roots now use `mouse_filter = IGNORE`, and the integration test asserts
-that synthetic touch and mouse events reach the gameplay handler.
-
-The exported files:
+Output sizes:
 
 | File | Size |
 | --- | --- |
-| `index.wasm` | ~38 MB uncompressed / ~10.1 MB gzip |
-| `index.pck` | ~2.1 MB |
+| `index.wasm` | ~38 MB raw / ~10.1 MB gzip |
+| `index.pck` | ~2.2 MB |
 | `index.js` | ~273 KB |
-| `index.html` | ~9.8 KB |
+| itch.io ZIP | ~12 MB |
 
-No service worker and no external network requests are used by the game itself.
+Smoke test (`tests/web_smoke.mjs`, Playwright, system Chrome, 390×844 touch
+emulation):
+
+- page title loaded;
+- loading overlay disappeared after WASM/PCK load;
+- WebGL2 Compatibility renderer initialized;
+- menu rendered;
+- touch PLAY started gameplay;
+- playfield tap switched lane;
+- pause opened;
+- **0 page errors, 0 failed requests, 0 console errors**.
+
+The 1.1.0 code (combo HUD, daily challenges screen/menu button, new HUD layers,
+challenge autoload) is included in this exported build.
 
 ---
 
@@ -191,80 +176,73 @@ No service worker and no external network requests are used by the game itself.
 | --- | --- | --- | --- | --- |
 | Boot / import | pass | pass | not built | not built |
 | Menu / navigation | pass | pass (play/pause) | not tested | not tested |
-| Touch input | n/a | emulated (pass) | not tested | not tested |
+| Touch input | synthetic pass | emulated pass | not tested | not tested |
 | Mouse input | pass | pass | n/a | n/a |
 | Keyboard input | pass | pass | n/a | n/a |
-| Gameplay / collision | automated + visual | partial (play, pause) | not tested | not tested |
-| Save persistence | automated | engine-managed IndexedDB, not reload-tested | not tested | not tested |
+| Combo scoring | automated | code in build, not interacted to combo | not tested | not tested |
+| Perfect dodge | automated | code in build | not tested | not tested |
+| Daily challenges | automated + visual | screen included; not clicked through | not tested | not tested |
+| Save persistence | automated | IndexedDB verified in 1.0 flow | not tested | not tested |
 | Safe area / notch | n/a | n/a | not tested | not tested |
 | Haptics | n/a | n/a | not tested | not tested |
-| Real ads | not bundled | disabled | not bundled | not bundled |
-| Real IAP | inactive | inactive | inactive | inactive |
+| Real ads / IAP | not bundled | disabled | not bundled | not bundled |
 | Low-end performance | not profiled | not profiled | not profiled | not profiled |
-| Physical Safari/Firefox/Edge | not tested | not tested | n/a | not tested |
 
-“Pass” means the listed verification actually ran; “not tested” means it still needs
-owner hardware/accounts.
+“Pass” means the listed verification actually ran; “not tested” still requires owner
+hardware/accounts.
 
 ---
 
 ## 5. Manual pre-release QA (recommended)
 
-- Install on a low-end Android phone and an iPhone with a notch.
-- Play 20+ runs; verify no frame hitching after 5+ minutes.
-- Background/foreground during a run, during pause and during an ad (when enabled).
-- Kill the app mid-run; relaunch and verify saves.
-- Set device font scaling / display zoom if the platform can affect Godot (it should
-  not; the game uses its own canvas).
-- Safari iOS: audio after tap, fullscreen behavior, safe area, loading time.
-- Firefox/Edge desktop web.
-- Test flight mode on mobile and offline mode.
-- Store test tracks: IAP restore, ad test units, consent.
-- Accessibility pass: keyboard-only navigation, reduced effects, contrast.
+- Play 20+ runs; verify combo milestones at 5/10/20/30 and score consistency.
+- Intentionally switch late into an obstacle: no perfect reward should be granted.
+- Play on a low-end Android phone and a notched iPhone.
+- Background/foreground during a run, pause and ad (when enabled).
+- Kill the app mid-run; relaunch and verify stats/save.
+- Cross midnight or change the date to verify daily rollover and no duplicate rewards.
+- Safari iOS, Firefox and Edge desktop.
+- Offline mobile play; store test tracks for future IAP/ads.
+- Accessibility: keyboard-only navigation, reduced effects (screen shake must be off).
 
 ---
 
 ## 6. Performance
 
-Design targets:
+Design targets remain 60 Hz physics / 60+ FPS where hardware allows.
 
-- 60 Hz physics, 60+ FPS where the device allows.
-- No texture-heavy scenes; custom canvas drawing.
-- Active obstacles: typically 2–5, hard cap not explicitly enforced but stress-tested
-  below 24.
-- Particles reduced automatically by the setting.
+New per-frame costs:
 
-Not measured: frame time on low-end hardware, memory/footprint on Android/iOS,
-thermal behavior, battery. Profile before marketing claims. Godot's *Monitors* and
-*Profiler* should be used on-device.
+- one cached gradient texture behind the top HUD;
+- one combo progress bar and a handful of labels;
+- perfect detection runs only on lane switches and scans the active obstacle set
+  (typically 2–5 objects);
+- challenge updates occur per dodge / per second, not per frame.
+
+No new textures, node-per-particle effects or allocations per frame were introduced.
+Not measured on physical devices; profile before store claims.
 
 ---
 
 ## 7. Reproducing the web smoke test
 
-The smoke script is committed at `tests/web_smoke.mjs`.
-
 ```bash
-npm install playwright          # from tests/ or a temp folder
+npm install playwright
 ./tools/build_web.sh
 python3 -m http.server 8765 --directory exports/web
 node tests/web_smoke.mjs
 ```
 
-It uses the installed Chrome channel, emulates a 390×844 touch device, clicks PLAY,
-switches lanes, opens pause and fails on page errors, failed requests or console
-errors. Screenshots land in `tests/artifacts/`.
-
-The exported game itself requires no credentials.
+Requires Google Chrome installed. Screenshots go to `tests/artifacts/`.
 
 ---
 
-## 8. Exit criteria used for v1.0.0
+## 8. Known gaps
 
-- Automated tests green.
-- No known crash or save-loss bug.
-- All screens render at 1080×1920.
-- Web export boots in Chrome.
-- Android/iOS presets parse, with signing/SDK steps clearly documented.
-- No real ad IDs, no active purchases, no network calls.
-- Documentation covers build, deploy, privacy, monetization and troubleshooting.
+- Android APK/AAB and iOS builds still require SDK/Xcode/team setup; not compiled here.
+- Real AdMob and IAP remain inactive.
+- Physical touch devices, notches, Safari/Firefox/Edge and low-end FPS are not verified.
+- Daily challenge score bonuses intentionally change the score economy; old best
+  scores remain valid but are easier to beat.
+- Web save commits to IndexedDB asynchronously (~1 s after a change in headless
+  Chrome); avoid closing the tab instantly after a save.
