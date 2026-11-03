@@ -18,6 +18,12 @@ mkdir -p exports/web
 "$GODOT_BIN" --headless --path "$ROOT" --import
 "$GODOT_BIN" --headless --path "$ROOT" --export-release "Web" "$ROOT/exports/web/index.html"
 
+# Web ad provider assets are deliberately outside the PCK.
+cp "$ROOT/web/ads-config.js" "$ROOT/exports/web/ads-config.js"
+cp "$ROOT/web/ads-bridge.js" "$ROOT/exports/web/ads-bridge.js"
+mkdir -p "$ROOT/exports/web/fonts"
+cp "$ROOT/web/fonts/rajdhani-bold.woff2" "$ROOT/exports/web/fonts/rajdhani-bold.woff2"
+
 touch exports/web/.nojekyll
 rm -f exports/one-more-second-web.zip
 (cd exports/web && zip -q -r ../one-more-second-web.zip .)

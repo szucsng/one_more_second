@@ -182,6 +182,11 @@ extensions. Do not commit copyrighted replacements.
   necessary.
 - Caching helps repeat visits, but fixed filenames require cache busting/versioning.
 
+### `ads-config.js` / `ads-bridge.js` 404
+
+A manual Godot export does not copy files from `web/`. Use `./tools/build_web.sh` or
+replicate its copy steps. If these files are missing, the game safely has no web ads.
+
 ### Fullscreen button does nothing
 
 - Fullscreen requires a user gesture.
@@ -254,11 +259,44 @@ Expected:
   has been used in the current run;
 - when a real provider is integrated, only advertise it when loaded.
 
+### The web reward prompt doesn't appear
+
+Check, in order:
+
+1. Is the build a **release** build with `AdConfig.PRODUCTION_ADS_ENABLED = false`?
+   That is intentional; no web ads are expected.
+2. Is `web/ads-config.js` copied into `exports/web/`? `ads-config.js`,
+   `ads-bridge.js` and `fonts/rajdhani-bold.woff2` are required. Use
+   `./tools/build_web.sh`, not a bare manual export.
+3. In `ads-config.js`: is `enabled: true`, is `adsenseClient` set, is consent
+   granted (or intentionally not required), and is the page HTTPS/localhost?
+4. Is `AdConfig.PRODUCTION_ADS_ENABLED = true` in the build?
+5. Check the browser console for `[OMSAds]` logs or script/3rd-party blocking.
+6. H5 approval/domain whitelisting may be missing on Google's side. No fill results
+   in the game-over status “NO OPTIONAL AD AVAILABLE”, not a crash.
+7. Test mode shows a yellow TEST AD label and no real ad. Set `testMode: false` only
+   for production after testing.
+8. Aggressive content blockers can block Google's script; the game must still
+   restart/menu normally.
+
+### Web interstitial doesn't show
+
+Interstitials are disabled by default in **two** places: `AdConfig.INTERSTITIAL_ENABLED`
+and `web/ads-config.js` `interstitialEnabled`. Keep them off unless web user-activation
+and policy behavior have been validated with the approved provider. The restart must
+never be blocked if no ad appears.
+
+### Native ads don't show
+
+Expected in v1.2. `NativeAdMobProvider` is a fail-closed stub; no plugin, app IDs,
+consent or native build are included. Follow [monetization.md](monetization.md) and
+[android-build.md](android-build.md) before enabling.
+
 ### Test ad overlay doesn't appear on web
 
-By design: `AdConfig.ALLOW_TEST_ADS_ON_WEB = false`. Web ads are a separate future
-decision. To QA the web overlay locally, set the flag to true **for the test build
-only** and do not publish it.
+By design: mock ads are debug-builds-only and disabled on web unless
+`ALLOW_MOCK_ON_WEB` is explicitly enabled for internal QA. Never publish a build with
+fake ads enabled.
 
 ### Store button does nothing
 
@@ -267,8 +305,7 @@ Expected: `Monetization.store_available` is false and premium skins are disabled
 
 ### I enabled real ads and the game shows test ads
 
-Set `AdConfig.TEST_MODE = false` and wire the real provider. Never ship production IDs
-that you do not own.
+Set `AdConfig.PRODUCTION_ADS_ENABLED = true` only after the real provider adapter, IDs and consent are configured. Never ship production IDs that you do not own.
 
 ---
 

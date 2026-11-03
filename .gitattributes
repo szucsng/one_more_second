@@ -11,3 +11,5 @@
 *.wasm binary
 *.pck binary
 *.tpz binary
+
+*.woff2 binary

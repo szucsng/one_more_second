@@ -1,7 +1,8 @@
 # Privacy
 
-**Summary: v1.1.0 makes no network requests, collects no personal data and stores
-everything locally on the player's device.**
+**Summary: v1.2.0 ships with ads disabled and makes no network requests by default.
+When production ads are explicitly enabled, Google AdSense H5 Games Ads loads a
+third-party script subject to Google's policies and the owner's CMP/consent setup.**
 
 This document describes the current build. It is not legal advice; adapt it to your
 jurisdiction and distribution stores before release.
@@ -34,15 +35,32 @@ jurisdiction and distribution stores before release.
 
 ## 2. Network
 
-v1 has **no network code**:
+The default release has **no third-party network requests**:
 
 - analytics is local JSONL;
-- ads are a local simulation, disabled on web;
+- ads are disabled by default (`AdConfig.PRODUCTION_ADS_ENABLED = false` and
+  `web/ads-config.js` enabled false);
 - the store is inactive;
-- no crash reporting, no telemetry, no fonts/CDNs loaded at runtime.
+- no crash reporting, no telemetry, no third-party fonts/CDNs.
 
-If analytics, ads, leaderboards or purchases are enabled later, this policy and the
-store disclosures must be updated **before** the new build ships.
+### If web ads are enabled
+
+Enabling the prepared Google AdSense H5 Games Ads integration changes the network
+profile:
+
+- the browser loads Google's AdSense/Ad Placement script and may contact Google ad
+  servers;
+- Google may use cookies/identifiers under its own policies;
+- EEA/UK/Switzerland personalized ads require a Google-certified CMP and valid
+  consent; the game does not claim that the owner's deployment is compliant;
+- the game/bridge must not be used to send player names, save data, scores or other
+  personal data to the provider. Our bridge sends only ad configuration and provider
+  callbacks;
+- the owner must update this policy, provide a privacy/consent UI through the CMP,
+  and complete the store data-safety disclosures before enabling production ads.
+
+Native AdMob is prepared but not active. The native adapter fails closed until an
+AdMob plugin, IDs, UMP consent and signed/tested builds are supplied.
 
 ---
 

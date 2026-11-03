@@ -387,39 +387,79 @@ notches and the Dynamic Island on phones that report a safe area.
 ## 11. Ads abstraction
 
 ```
-AdsManager (autoload, policy/owner)
-   └─ uses AdConfig + optional provider
-AdProvider (class_name, RefCounted contract)
-   ├─ initialize()
-   ├─ is_rewarded_available()
-   ├─ show_rewarded()
-   ├─ show_interstitial()
-   └─ show/hide_banner()
+Gameplay / GameOver
+   │
+AdsManager (autoload: policy, timeouts, duplicate reward guard, analytics)
+   │
+AdProvider (Node contract)
+   ├── MockAdProvider          debug/test only, local overlay
+   ├── WebH5AdProvider         AdSense H5 Games Ads
+   ├── NativeAdMobProvider     prepared native stub, fails closed
+   └── UnavailableAdProvider   explicit no-provider result
 ```
 
-v1 implementation:
+Public manager signals:
 
-- `AdConfig.TEST_MODE = true` → `AdsManager` instantiates
-  `scenes/components/TestAdOverlay.tscn`.
-- The overlay is clearly labelled **SIMULATED AD / TEST AD**, states no network or
-  tracking, allows closing immediately, and awards after a five-second timer + claim.
-- Web is excluded from the test ad (`ALLOW_TEST_ADS_ON_WEB = false`); the web build
-  ships ad-free.
-- No ad load happens during gameplay.
-- Reward is only granted after the overlay emits `completed`; close emits `dismissed`.
-- Gameplay limits rewards to one per run and displays the prompt only if
-  `Ads.is_rewarded_available()`.
+`ad_loaded`, `ad_shown`, `ad_closed`, `ad_failed`, `rewarded_ready_changed`,
+`rewarded_granted`, `rewarded_dismissed`, `interstitial_finished`.
 
-Interstitial policy (disabled):
+Public capability API:
 
-- opt-in via `AdConfig.INTERSTITIAL_ENABLED`;
-- minimum 3 runs and 150 s since the last interstitial;
-- never during a run, never on every restart, never without a loaded creative.
+`can_show_rewarded_ad()`, `show_rewarded_ad()`, `prepare_rewarded_ad()`,
+`can_show_interstitial()`, `show_interstitial()`, `cancel_rewarded_prompt()`,
+`uses_dom_reward_prompt()`.
 
-Banner hooks exist but are disabled.
+### Provider selection
 
-The real AdMob adapter is intentionally not included; wiring instructions and test
-IDs are in [monetization.md](monetization.md).
+- Production disabled (`AdConfig.PRODUCTION_ADS_ENABLED = false`) → unavailable
+  provider on web/release; mock provider only in debug desktop/native builds.
+- Production enabled + web → `WebH5AdProvider`.
+- Production enabled + Android/iOS → `NativeAdMobProvider` stub (no plugin bundled).
+- Production enabled + desktop → unavailable.
+- `ALLOW_MOCK_ON_WEB` is false; fake ads never ship on web.
+
+### Rewarded flow
+
+1. Game over calls `prepare_rewarded_ad()`.
+2. Web: `web/ads-bridge.js` invokes the official `adBreak({type: "reward"})`.
+3. The API calls `beforeReward(showAdFn)` only when an ad is actually available.
+4. The bridge shows a DOM reward prompt. Its watch button calls `showAdFn()` directly
+   from the browser click, preserving the user gesture required by Google.
+5. Lifecycle: `beforeAd` → shown, `adViewed` → reward earned, `adDismissed` → no
+   reward, `afterAd` → closed, `adBreakDone` → always.
+6. `AdsManager` grants only after a provider-confirmed reward and close. A
+   `_reward_granted_this_attempt` guard blocks duplicate callbacks.
+7. `Gameplay.revive_used` is the final one-revive-per-run guard.
+8. Any failure/no fill/timeout leaves Restart and Menu available.
+
+The mock provider uses `TestAdOverlay.tscn`; it is clearly labelled as a simulation
+and is restricted to debug builds. The native provider is a deliberate fail-closed
+stub until a maintained AdMob plugin is installed and tested.
+
+### Web bridge
+
+- `web/ads-config.js` is public, non-secret configuration: enabled switch, AdSense
+  publisher ID, test mode, consent state, frequency hint, optional interstitial flag.
+- `web/ads-bridge.js` owns all Google JavaScript, dynamic AdSense tag injection,
+  consent/host gating, the Ad Placement callbacks and the DOM prompt.
+- With default config it does not load Google's script and makes no ad requests.
+- `web/shell.html` includes the bridge/config scripts; `tools/build_web.sh` copies
+  them and the prompt font into the export. The GitHub Pages workflow does the same.
+- The bridge exposes a single `OMSAdsBridge` interface to Godot through
+  `JavaScriptBridge`; provider-specific JavaScript never enters gameplay scripts.
+
+### Interstitial policy
+
+- `AdConfig.INTERSTITIAL_ENABLED` + web config `interstitialEnabled`; both default
+  false.
+- Policy: at least 3 completed runs and 150 s since the last impression.
+- Requested only from the explicit Restart action at game over, never during play,
+  pause, a reward prompt or another ad.
+- If unavailable/failing/timing out, the next run starts immediately.
+- Ads are counted only when the provider actually calls `beforeAd`/shown.
+
+Banners remain unimplemented and disabled. Production enablement requirements are
+documented in [monetization.md](monetization.md).
 
 ---
 

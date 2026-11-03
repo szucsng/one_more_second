@@ -63,6 +63,10 @@ jobs:
         run: |
           mkdir -p exports/web
           "$GODOT_BIN" --headless --path . --export-release "Web" "$PWD/exports/web/index.html"
+          cp web/ads-config.js exports/web/ads-config.js
+          cp web/ads-bridge.js exports/web/ads-bridge.js
+          mkdir -p exports/web/fonts
+          cp web/fonts/rajdhani-bold.woff2 exports/web/fonts/rajdhani-bold.woff2
           touch exports/web/.nojekyll
 
       - name: Package itch.io ZIP

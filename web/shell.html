@@ -9,6 +9,13 @@
 	<meta name="description" content="ONE MORE SECOND — a minimalist neon reflex arcade game. Two lanes. One tap. Stay alive.">
 	<title>$GODOT_PROJECT_NAME</title>
 	<style>
+		@font-face {
+			font-family: "OMS Rajdhani";
+			src: url("fonts/rajdhani-bold.woff2") format("woff2");
+			font-weight: 700 900;
+			font-style: normal;
+			font-display: swap;
+		}
 		:root {
 			--bg: #050505;
 			--surface: #0c0c0c;
@@ -31,7 +38,7 @@
 			overscroll-behavior: none;
 			-webkit-user-select: none;
 			user-select: none;
-			font-family: "Rajdhani", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+			font-family: "OMS Rajdhani", "Rajdhani", "Avenir Next", "Segoe UI", system-ui, sans-serif;
 		}
 		#canvas {
 			display: block;
@@ -237,6 +244,8 @@
 		<div class="notes">Best played in portrait · Progress saved on this device</div>
 	</div>
 
+	<script src="ads-config.js"></script>
+	<script src="ads-bridge.js"></script>
 	<script src="$GODOT_URL"></script>
 	<script>
 		const GODOT_CONFIG = $GODOT_CONFIG;

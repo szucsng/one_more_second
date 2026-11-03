@@ -62,6 +62,10 @@ Used for the wordmark, headings and button labels. The font is bundled unmodifie
 
 Used for UI text, numbers and captions. The fonts are bundled unmodified.
 
+A subset of Rajdhani Bold is converted to WOFF2 for the web loading shell and optional
+ad/reward prompt (`web/fonts/rajdhani-bold.woff2`). It is generated from the OFL font
+by `tools/build_web_font.sh` and remains under the SIL Open Font License 1.1.
+
 The SIL Open Font License permits bundling and embedding. It does not grant rights to
 the ONE MORE SECOND trademarks or game art.
 
@@ -92,7 +96,24 @@ trademarked characters are used.
   used as a development tool, not linked into the game)
 - Google Fonts OFL-licensed fonts
 - Playwright/Chromium for the web smoke test (development tool only)
-- Google AdMob test identifiers are documented constants only; no SDK is bundled.
+- Google AdMob test identifiers are documented constants only; no native SDK is bundled.
+
+---
+
+## Google AdSense H5 Games Ads (optional, production disabled)
+
+The web project contains an optional, disabled-by-default integration with Google
+AdSense H5 Games Ads / the Ad Placement API. When the owner enables it with an
+approved account, the browser loads Google's script and Google acts as a third-party
+ad provider under Google's own terms and privacy policy. No Google SDK/script is
+loaded by the default build.
+
+- Google AdSense: https://adsense.google.com/
+- Ad Placement API: https://developers.google.com/ad-placement/apis
+- Google privacy policy: https://policies.google.com/privacy
+
+The repository does not include live publisher IDs or ad-unit IDs. The constants in
+`systems/ads/ad_config.gd` are Google's public sample/test units only.
 
 ---
 

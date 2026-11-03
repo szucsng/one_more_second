@@ -8,6 +8,7 @@ All test assets are excluded from web/mobile exports.
 godot --headless --path . res://tests/GameplayTest.tscn
 godot --headless --path . res://tests/ScoringTest.tscn
 godot --headless --path . res://tests/ChallengeTest.tscn
+godot --headless --path . res://tests/AdsTest.tscn
 godot --headless --path . res://tests/SpawnerStress.tscn
 ```
 
@@ -18,6 +19,9 @@ godot --headless --path . res://tests/SpawnerStress.tscn
   pattern unlocks and the deterministic daily challenge catalog.
 - `ChallengeTest` verifies daily progress, date rollover, save persistence and that a
   completed challenge cannot reward twice.
+- `AdsTest` injects a controllable provider and verifies unavailable/load/display
+  failures, timeouts, duplicate reward protection, dismissal without reward,
+  interstitial policy and save restoration.
 - `SpawnerStress` simulates five minutes at 60 Hz with a seed and asserts pattern
   variety, recovery sections, spacing and a bounded active set.
 

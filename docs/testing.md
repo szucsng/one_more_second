@@ -1,4 +1,4 @@
-# Testing & Verification — v1.1.0
+# Testing & Verification — v1.2.0
 
 Test date: **2026-11-03**
 Engine: **Godot 4.7.2 stable** (`ed1daf0bf`)
@@ -23,7 +23,7 @@ Result: **pass**, no GDScript parse errors. The usual Godot headless shutdown wa
 about lingering ObjectDB/resources appears after tests quit; it does not occur during
 normal gameplay.
 
-### 1.2 Gameplay integration — 51 assertions PASS
+### 1.2 Gameplay integration — 55 assertions PASS
 
 ```bash
 godot --headless --path . res://tests/GameplayTest.tscn
@@ -42,6 +42,7 @@ Result: **PASS (0 failures)**. Covers:
   repeated award call is blocked;
 - a safe switch without danger does not award a perfect dodge;
 - pause/resume preserves combo; death clears it; game over reports max combo;
+- a rewarded mock ad revives once; a second death offers no second revive;
 - rewarded test ad revive works;
 - save reload preserves best score, skin and volume;
 - a completed challenge adds its reward to the run score exactly once, and a second
@@ -83,7 +84,26 @@ Result: **PASS (0 failures)**. Covers:
   lifetime completed count;
 - challenge progress values/ratios are exposed to the UI.
 
-### 1.5 Five-minute spawner stress — 14 assertions PASS
+### 1.5 Ads lifecycle — 46 assertions PASS
+
+```bash
+godot --headless --path . res://tests/AdsTest.tscn
+```
+
+Result: **PASS (0 failures)**. Covers:
+
+- production ads and interstitials disabled by default;
+- pure frequency policy (min runs, cooldown, expiry);
+- provider unavailable;
+- successful reward flow, duplicate provider reward callbacks grant exactly once;
+- reward view counted only after a confirmed reward;
+- dismissed ad grants nothing and reports one dismissal;
+- load failure and display failure;
+- preparation timeout and close timeout;
+- interstitial policy, fake interstitial flow and shown-only impression counting;
+- save data remains readable after tests.
+
+### 1.6 Five-minute spawner stress — 14 assertions PASS
 
 ```bash
 godot --headless --path . res://tests/SpawnerStress.tscn
@@ -120,8 +140,9 @@ Screens reviewed at 1080×1920:
 | Daily challenges (summary, 3 cards, progress bars, rewards) | pass |
 | Gameplay HUD (score, top fade, combo chip/bar, daily progress, perfect callout) | pass |
 | Pause | pass |
-| Game over (4-stat row: best, survived, max combo, perfects) | pass |
+| Game over with rewarded mock prompt (4 stats: best, survived, max combo, perfects) | pass |
 | Simulated test ad | pass |
+| Web rewarded DOM prompt (test mode, mocked provider contract) | pass |
 
 Design fixes/checks during this update:
 
@@ -136,7 +157,7 @@ still required.
 
 ---
 
-## 3. Web verification — v1.1.0
+## 3. Web verification — v1.2.0
 
 Build:
 
@@ -165,8 +186,8 @@ emulation):
 - pause opened;
 - **0 page errors, 0 failed requests, 0 console errors**.
 
-The 1.1.0 code (combo HUD, daily challenges screen/menu button, new HUD layers,
-challenge autoload) is included in this exported build.
+The 1.2.0 code (ads bridge/config files, H5 provider, DOM prompt, ad lifecycle and
+the 1.1 gameplay update) is included in this exported build.
 
 ---
 
@@ -182,6 +203,9 @@ challenge autoload) is included in this exported build.
 | Combo scoring | automated | code in build, not interacted to combo | not tested | not tested |
 | Perfect dodge | automated | code in build | not tested | not tested |
 | Daily challenges | automated + visual | screen included; not clicked through | not tested | not tested |
+| Ads (disabled default) | automated | ad-free verified | not tested | not tested |
+| Web H5 ad bridge | mocked contract | mocked prompt → revive; not live Google | n/a | n/a |
+| Native AdMob | fail-closed stub | n/a | not built | not built |
 | Save persistence | automated | IndexedDB verified in 1.0 flow | not tested | not tested |
 | Safe area / notch | n/a | n/a | not tested | not tested |
 | Haptics | n/a | n/a | not tested | not tested |
@@ -246,3 +270,6 @@ Requires Google Chrome installed. Screenshots go to `tests/artifacts/`.
   scores remain valid but are easier to beat.
 - Web save commits to IndexedDB asynchronously (~1 s after a change in headless
   Chrome); avoid closing the tab instantly after a save.
+- Web interstitials are implemented but disabled by default; browser user-activation
+  behavior for the restart-triggered `adBreak` must be validated with the approved
+  provider before enabling them.

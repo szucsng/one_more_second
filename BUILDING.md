@@ -5,7 +5,7 @@ Quick platform-by-platform build reference. Detailed guides are linked in each s
 - Engine: **Godot 4.7.2** (standard build)
 - Renderer: **Compatibility** (WebGL2 / OpenGL ES 3)
 - Design canvas: **1080 × 1920**, portrait
-- Version: **1.1.0** (Android version code `2`, iOS build `2`)
+- Version: **1.2.0** (Android version code `3`, iOS build `3`)
 - Package / bundle id: **com.onemoresecond.game** (change before store release)
 
 Install the matching **export templates** first:
@@ -30,6 +30,7 @@ export GODOT_BIN="/path/to/Godot_v4.7.2-stable..."
 "$GODOT_BIN" --headless --path . res://tests/GameplayTest.tscn
 "$GODOT_BIN" --headless --path . res://tests/ScoringTest.tscn
 "$GODOT_BIN" --headless --path . res://tests/ChallengeTest.tscn
+"$GODOT_BIN" --headless --path . res://tests/AdsTest.tscn
 "$GODOT_BIN" --headless --path . res://tests/SpawnerStress.tscn
 ```
 
@@ -82,7 +83,8 @@ Do **not** open `index.html` via `file://`; WebAssembly and fetch require HTTP.
 
 ### Host
 
-- GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys automatically.
+- GitHub Pages: `.github/workflows/deploy-web.yml` builds and deploys automatically,
+  including `ads-config.js`, `ads-bridge.js` and the prompt font.
 - itch.io: upload `exports/one-more-second-web.zip` as an HTML game, 540×960 or
   “embed in page”, fullscreen enabled.
 - Own host: serve `.wasm` as `application/wasm` and enable gzip/Brotli.
@@ -185,7 +187,7 @@ Before a store release, update all of these:
 | `export_presets.cfg` | iOS `application/version` (build number, must increase) |
 | `CHANGELOG.md` | release notes date/version |
 
-Version 1.1.0 introduces combo/perfect scoring, new patterns and local daily challenges. Save data from 1.0.0 is merged forward automatically.
+Version 1.2.0 adds the ad provider architecture, web AdSense H5 bridge and native AdMob prep. Production web ads remain disabled until config/approval. Save data from 1.0.0 is merged forward automatically.
 
 Android version code is an integer and must strictly increase. iOS build number is a
 string but should also increase.

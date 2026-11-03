@@ -70,12 +70,20 @@ analytics facade, and deliberately inactive monetization hooks.
 - Settings: SFX, music, master volume, vibration (mobile), reduced effects, fullscreen
   (web/desktop), local analytics, reset progress.
 - Local JSON save with backup rotation and corruption recovery.
-- Simulated, clearly-labelled rewarded ad for the revive loop; real ads are not bundled.
-- Privacy-first local analytics (JSONL) with an on/off setting; no network calls.
+- Provider-agnostic rewarded-ad system for the revive loop: a mock provider in
+  development and a Google AdSense H5 Games Ads bridge prepared for web.
+  Production web ads are **disabled by default** until the owner supplies approval,
+  publisher ID, CMP consent and hosting configuration.
+- Optional interstitials at run transitions, frequency-capped and disabled by default;
+  no banners.
+- Privacy-first local analytics (JSONL) with an on/off setting; the default build makes
+  no ad network requests.
 
 ### Platforms
 - **Web/HTML5**: Godot Web export, custom responsive HTML shell, mobile touch and
   keyboard, fullscreen support, GitHub Pages and itch.io packaging documented.
+  Isolated AdSense H5 Games Ads bridge, DOM reward prompt and consent/config gate;
+  live production ads remain disabled pending Google approval and owner IDs.
 - **Android**: configured portrait export preset, adaptive icons, immersive mode,
   APK/AAB workflow documented.
 - **iOS**: configured portrait export preset, icon set, Xcode/App Store workflow
@@ -85,8 +93,8 @@ analytics facade, and deliberately inactive monetization hooks.
 - Typed GDScript, central palette/design system, reusable theme generated from code.
 - No paid or third-party game assets. Fonts are OFL; all art and audio are generated
   procedurally by scripts in `tools/`.
-- Headless integration tests, pure scoring/challenge tests and a five-minute
-  spawner fairness stress test.
+- Headless integration tests, pure scoring/challenge tests, ad lifecycle/policy tests
+  and a five-minute spawner fairness stress test.
 - CI workflow that builds and deploys the web version to GitHub Pages.
 
 ---
@@ -102,7 +110,8 @@ analytics facade, and deliberately inactive monetization hooks.
 | ![Menu](docs/screenshots/menu.png) | ![Game over](docs/screenshots/game-over.png) |
 
 Game over includes a reward loop only where a rewarded ad provider is available.
-The web build ships without ads, so no ad prompt is shown there.
+The default web build ships without ads. The prepared H5 reward prompt is shown only
+after production approval, publisher ID and consent are configured.
 
 ---
 
@@ -135,6 +144,7 @@ godot --headless --path . --import
 godot --headless --path . res://tests/GameplayTest.tscn
 godot --headless --path . res://tests/ScoringTest.tscn
 godot --headless --path . res://tests/ChallengeTest.tscn
+godot --headless --path . res://tests/AdsTest.tscn
 godot --headless --path . res://tests/SpawnerStress.tscn
 ```
 
@@ -229,7 +239,7 @@ one_more_second/
 - **GitHub Actions:** `.github/workflows/deploy-web.yml` builds and publishes the web
   game to GitHub Pages on every push to `main`/`master` (or manually).
 
-Version 1.1.0 uses Godot **4.7.2**. Export templates must match the editor version
+Version 1.2.0 uses Godot **4.7.2**. Export templates must match the editor version
 exactly. The project uses the **Compatibility** renderer for broad web/mobile support.
 
 ---
@@ -238,16 +248,32 @@ exactly. The project uses the **Compatibility** renderer for broad web/mobile su
 
 The base game is free and fully playable offline.
 
-- Rewarded revive is implemented behind an ad abstraction and runs as a **clearly
-  labelled local simulation**. No real ad SDK is bundled. The host can close the
-  test ad at any time without losing the run.
-- On web, ads are deliberately **disabled**. The web ad strategy must be decided
-  separately, with its own approval and privacy work.
-- Interstitial/banner code paths and frequency policy exist but are disabled.
+- Rewarded revive is implemented behind a provider abstraction. In debug desktop/native
+  builds a clearly-labelled **SIMULATED TEST AD** remains available; it is never used
+  in release or on web.
+- Web integration: **Google AdSense H5 Games Ads** (official Ad Placement API) is
+  wired through an isolated JavaScript bridge. The reward prompt is a styled DOM
+  dialog whose button calls the provider's `showAdFn()` directly, preserving the
+  required user gesture.
+- **Production web ads are disabled by default** in two places:
+  `AdConfig.PRODUCTION_ADS_ENABLED = false` and `web/ads-config.js` `enabled: false`.
+  With defaults, no Google script or request is made.
+- Enabling requires an approved AdSense H5 Games Ads account, an approved domain,
+  HTTPS, a publisher ID and a Google-certified CMP for EEA/UK consent. Those are
+  owner/external steps documented in [docs/monetization.md](docs/monetization.md).
+- Interstitial policy and provider hooks exist but are disabled by default. Banner
+  code is intentionally not displayed.
 - The store abstraction lists planned products and prices; **no purchase flow is
   active** and no fake transaction is exposed.
-- AdMob test IDs are included only as documentation constants. Production IDs must
-  be supplied by the owner. Integration steps: [docs/monetization.md](docs/monetization.md).
+- AdMob test IDs are included only as documentation constants. A native adapter
+  interface is prepared, but no native AdMob plugin is bundled or tested.
+
+<p align="center">
+  <img src="docs/screenshots/ads-prompt.png" width="280" alt="Rewarded ad prompt in test mode">
+</p>
+
+*The web reward prompt in test mode. The "TEST AD" label is hidden for production;
+production remains disabled until owner approval.*
 
 Optional support for the developer is prepared: set `GameConfig.SUPPORT_URL` in
 `scripts/core/game_config.gd` to a real page (itch.io, Ko-fi, etc.). While the string
@@ -260,9 +286,12 @@ is empty, the button is hidden.
 - No location, contacts, advertising identifiers or personal data are collected.
 - Analytics v1 is **local only**: JSONL files under `user://analytics/`, capped and
   rotated, controllable in Settings.
-- No network calls are made by the game, the analytics layer or the store layer.
-- If a real ad network or a cloud leaderboard is added later, the owner must add the
-  corresponding consent, privacy-policy and store disclosures.
+- The default build makes no ad network requests. If production web ads are enabled,
+  Google's AdSense/Ad Placement script becomes a third-party network participant;
+  the owner must integrate a certified CMP, update this policy and complete store
+  disclosures before release.
+- The ad bridge does not send save data, scores, names or other personal data to the
+  provider; only standard provider configuration/callbacks are used.
 - Saves remain on the device (IndexedDB for web, app data for Android/iOS).
 
 See [docs/privacy.md](docs/privacy.md).
@@ -274,20 +303,27 @@ See [docs/privacy.md](docs/privacy.md).
 Verified in this build:
 
 - Godot 4.7.2 project import with zero parse errors.
-- Headless gameplay integration test (51 assertions): boot, input, exact combo
+- Headless gameplay integration test (55 assertions): boot, input, exact combo
   multipliers, one-per-obstacle perfect dodges, collision/reset, restart,
-  pause/resume, challenge reward and duplicate guard, rewarded revive, save
+  pause/resume, challenge reward and duplicate guard, one-revive-per-run, save
   round-trip and analytics.
 - Pure scoring/difficulty/daily-catalog test (57 assertions) and challenge
   persistence/rollover test (14 assertions).
+- Ads lifecycle/policy test (46 assertions): provider unavailable, load/display
+  failure, ready/close timeout, duplicate reward callbacks, dismissed ad, one reward,
+  interstitial policy/impression counting and save restoration.
 - Headless five-minute spawner stress test (14 assertions): 470 obstacles, six
   patterns, four recovery sections, bounded active set, zero unreactable two-lane
   overlaps, scripted safe-lane bot survives.
 - Native visual review of every screen at 1080×1920, including combo HUD, challenge
-  screen, perfect-dodge feedback and challenge toast.
-- Native visual review of every screen at 1080×1920 (macOS, Compatibility renderer).
+  screen, rewarded game-over state and challenge toast.
 - Web export loaded from a local HTTP server in headless Chrome (WebGL2): menu,
   mouse/touch/keyboard input, Play, pause, no console/page errors.
+- Default web build verified ad-free: bridge reports `ads_disabled`, zero Google ad
+  requests, no AdSense script and no reward prompt.
+- Web H5 integration verified against a mocked implementation of the official
+  Ad Placement API contract: DOM prompt → watch click → provider shown/reward/close
+  → one revive, with no console errors. **Not** live Google fill/approval.
 - Mobile browser emulation (390×844, touch): portrait layout, touch PLAY, single-tap
   lane switch, touch pause, no console errors.
 
@@ -295,7 +331,9 @@ Not verified (requires owner accounts/hardware):
 
 - Android APK/AAB compilation and on-device run (Android SDK not installed here).
 - iOS export, signing, Xcode build and device/App Store run (no Apple account/team).
-- Real AdMob serving and real in-app purchases.
+- Live AdSense H5 approval/fill/domain whitelisting and a real CMP; the bridge itself
+  was tested with a mocked Ad Placement API contract.
+- Native AdMob serving, plugin installation and real in-app purchases.
 - Low-end physical phones, Safari/Firefox/Edge on physical devices.
 
 Exact test matrix and evidence: [docs/testing.md](docs/testing.md).
@@ -309,10 +347,12 @@ Exact test matrix and evidence: [docs/testing.md](docs/testing.md).
 - The project is portrait-first and uses a 1080×1920 design canvas with letterboxing
   on unusual aspect ratios.
 - Web audio starts after the first user interaction (browser policy).
-- The web build has no ads; the test ad is available only on desktop/native QA.
-- Real store/ads plugins are intentionally absent from v1.
+- The shipped web build is ad-free by default. Enabling live ads requires owner
+  approval, IDs, CMP consent and hosting verification; the mock ad is debug-only.
+- The native AdMob adapter is a prepared fail-closed interface; no native plugin is
+  bundled or tested.
 - Combo scoring changes the score scale (old records remain valid but are easier to
-  beat); this is intentional in 1.1.0.
+  beat); this is intentional since 1.1.0.
 - Daily challenge progress is stored locally per date; changing device time or
   clearing site/app data changes the local set/progress.
 - Cloud saves, global leaderboards and daily challenges are future work; the

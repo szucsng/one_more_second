@@ -28,6 +28,9 @@ exports/web/
 ├── index.audio.position.worklet.js
 ├── index.icon.png
 ├── index.apple-touch-icon.png
+├── ads-config.js                public web-ad config (disabled by default)
+├── ads-bridge.js                isolated AdSense H5 bridge
+├── fonts/rajdhani-bold.woff2    loading screen / ad prompt font
 └── .nojekyll
 exports/one-more-second-web.zip  itch.io upload
 ```
@@ -35,12 +38,19 @@ exports/one-more-second-web.zip  itch.io upload
 Typical transfer size with gzip: **~10 MB wasm + ~1.5 MB pck**; the itch ZIP is ~12 MB. Enable compression
 on the host. There is no CDN dependency in the game.
 
-Manual equivalent:
+Manual equivalent (advanced; also copy the ad/font support files):
 
 ```bash
 mkdir -p exports/web
 godot --headless --path . --export-release "Web" "$PWD/exports/web/index.html"
+cp web/ads-config.js exports/web/
+cp web/ads-bridge.js exports/web/
+mkdir -p exports/web/fonts
+cp web/fonts/rajdhani-bold.woff2 exports/web/fonts/
 ```
+
+Using `./tools/build_web.sh` is preferred because it performs those copies
+automatically and packages the ZIP.
 
 Do not open the file directly with `file://`.
 
@@ -174,7 +184,7 @@ requires them.
 Because Godot outputs fixed filenames, a cached `index.wasm` can pair with a new
 `index.pck` and break. Recommended:
 
-- deploy to `/releases/1.1.0/` and point the homepage link at the new folder;
+- deploy to `/releases/1.2.0/` and point the homepage link at the new folder;
 - or purge the CDN on deploy;
 - or keep `index.html` and `index.js` `no-cache` and use short wasm/pck TTLs.
 
@@ -248,7 +258,8 @@ The ZIP has `index.html` at the root, as itch.io expects.
 The custom shell:
 
 - shows the ONE MORE SECOND wordmark and a neon progress bar;
-- installs no service worker and makes no external requests;
+- installs no service worker and makes no external requests **unless web ads are
+  explicitly enabled**;
 - shows a readable failure message if WebGL2 or required browser features are missing;
 - allows fullscreen from the loading screen;
 - prevents context menus, scrolling and double-tap zoom;
@@ -289,13 +300,29 @@ phones, iOS Safari. Validate on the target matrix before a marketing push.
 
 - No analytics data leaves the browser. Local events are stored in IndexedDB and are
   only visible to the player (or via DevTools).
-- No ads are loaded on web. The in-game rewarded test overlay is disabled on web by
-  `AdConfig.ALLOW_TEST_ADS_ON_WEB = false`.
-- If a web ad network or a hosted analytics service is added:
-  - add consent management (GDPR/UK GDPR, CCPA where relevant);
-  - update the privacy policy and store listings;
-  - obtain owner approval for network IDs;
-  - never auto-play interstitial ads or hide the no-ad path.
+- **The default web build is ad-free.** With `AdConfig.PRODUCTION_ADS_ENABLED = false`
+  and `web/ads-config.js` `enabled: false`, the bridge makes **no Google network
+  requests**, loads no AdSense script and creates no ad prompt.
+- The Google AdSense H5 Games Ads integration is prepared in
+  `web/ads-bridge.js` + `systems/ads/providers/web_h5_ad_provider.gd`.
+  H5 Games Ads is **by application** and requires an approved AdSense account,
+  domain approval, HTTPS and a Google-certified CMP for EEA/UK consent.
+- To enable, follow [monetization.md](monetization.md) exactly, including:
+  - `web/ads-config.js` publisher ID/test mode/consent;
+  - `AdConfig.PRODUCTION_ADS_ENABLED = true`;
+  - test mode first, then production;
+  - real policy/consent review.
+- The reward prompt is a styled DOM dialog. Its watch button calls the provider's
+  `showAdFn()` directly from the browser click, which preserves the user gesture
+  required by the Ad Placement API. The prompt clearly labels production/optional
+  ads and offers **NO THANKS**.
+- Interstitials remain disabled by default. If enabled later, test web user
+  activation with the approved provider before shipping.
+- Do not enable a banner in active gameplay.
+- Giving the game an ad provider changes the privacy/network profile: update the
+  privacy policy, CMP consent and store disclosures first.
+- If you add a Content-Security-Policy, allow the Google ad script/frame domains
+  required by Google's current documentation; test the actual ad flow afterward.
 
 ---
 
@@ -312,6 +339,9 @@ phones, iOS Safari. Validate on the target matrix before a marketing push.
 - [ ] Portrait layout on a phone; no content under the notch.
 - [ ] Fullscreen enters/exits where the browser allows it.
 - [ ] Sound begins after the first interaction.
+- [ ] Default ad-free build: no AdSense script and zero Google ad requests.
+- [ ] Ad-enabled build (only after approval): CMP consent, test mode, domain
+      approval, prompt, reward, no-fill/failure paths.
 - [ ] `index.wasm` is compressed (gzip/Brotli) in production.
 - [ ] Mobile data load time acceptable; if not, consider a lighter future engine
       build or a native app funnel.

@@ -199,7 +199,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 106)
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
-text = "WATCH AD TO CONTINUE"
+text = "WATCH AD — CONTINUE"
 script = ExtResource("2_neon")
 
 [node name="AdCaption" type="Label" parent="Center/Panel/Content"]
@@ -207,7 +207,7 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
-text = "TEST AD • OPTIONAL • YOUR SCORE IS ALREADY SAVED"
+text = "OPTIONAL • YOUR SCORE IS ALREADY SAVED"
 horizontal_alignment = 1
 
 [node name="RestartButton" type="Button" parent="Center/Panel/Content"]

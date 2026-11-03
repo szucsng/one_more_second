@@ -29,7 +29,7 @@ Install the iOS export template from Godot: *Editor → Manage Export Templates*
 
 - bundle identifier: `com.onemoresecond.game` **← change to your owned id before
   first upload**
-- short version: `1.1.0`; build number: `2`
+- short version: `1.2.0`; build number: `3`
 - orientation: portrait via `project.godot`
 - app icons: `assets/icons/ios/icon_*.png` (20–1024 px), including iPad sizes
 - App Store 1024×1024 icon
@@ -205,11 +205,15 @@ Not tested here: any of the above on physical iOS hardware.
 
 No AdMob/StoreKit code is bundled. To add them:
 
-1. Use a Godot 4.7-compatible AdMob plugin or native iOS bridge.
-2. Implement the `AdProvider` contract and swap it in `AdsManager`.
-3. Set `AdConfig.TEST_MODE = false` only after production IDs are supplied.
-4. Add ATT (`NSUserTrackingUsageDescription`) only if tracking is actually used, and
-   request permission before personalized ads.
+1. Verify a maintained AdMob plugin compatible with **Godot 4.7.2** (the Poing Studios
+   plugin documents Godot 4.5+, Xcode 15+, iOS 15+; verify the current release).
+2. Implement the existing `NativeAdMobProvider` contract against that plugin, including
+   app/unit IDs, rewarded/interstitial loading and reward callbacks. The current stub
+   intentionally fails closed.
+3. Add UMP consent before initialization/loading; add ATT only if tracking is actually
+   used, and request permission before personalized ads.
+4. Test with Google test ad units on physical devices, then enable
+   `AdConfig.PRODUCTION_ADS_ENABLED` only when IDs, consent and signing are ready.
 5. Add StoreKit for the planned skins/remove-ads products; validate transactions and
    restore purchases.
 6. Update the privacy policy, App Store Connect disclosures and review notes.

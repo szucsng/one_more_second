@@ -96,3 +96,15 @@ func set_buttons_enabled(enabled: bool) -> void:
 func refresh_continue_visibility(can_continue: bool) -> void:
 	continue_button.visible = can_continue
 	ad_caption.visible = can_continue
+
+
+func show_continue_available(available: bool, disclosure: String) -> void:
+	continue_button.visible = available
+	ad_caption.text = disclosure
+	ad_caption.visible = not disclosure.is_empty()
+
+
+func set_ad_status(text: String) -> void:
+	continue_button.visible = false
+	ad_caption.text = text
+	ad_caption.visible = not text.is_empty()

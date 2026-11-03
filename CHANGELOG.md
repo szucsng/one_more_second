@@ -3,6 +3,48 @@
 All notable changes to ONE MORE SECOND are documented here.
 Format follows the spirit of Keep a Changelog; versions follow semantic versioning.
 
+## [1.2.0] — 2026-11-03
+
+### Added
+
+- **Web ad integration (disabled by default):** isolated Google AdSense H5 Games
+  Ads bridge (`web/ads-bridge.js`) using the official Ad Placement API
+  (`adBreak`/`adConfig`), a public non-secret `web/ads-config.js`, consent/host/
+  publisher-ID gating, test-mode support, and build/CI copying of the web assets.
+- **Provider architecture:** `AdProvider` lifecycle contract, `AdsManager` mediation,
+  `MockAdProvider`, `WebH5AdProvider`, fail-closed `NativeAdMobProvider` stub,
+  `UnavailableAdProvider`, and pure `AdPolicy` frequency rules.
+- **Rewarded UX:** provider-confirmed revive, styled DOM reward prompt for web
+  (preserves the browser user gesture), loading/unavailable/dismissed/failure states,
+  duplicate reward-callback guard, one revive per run, and restart/menu always
+  available.
+- **Interstitials:** natural-break restart flow, minimum 3 runs / 150 s cooldown,
+  no gameplay interruption, automatic restart after no-fill/failure/timeout; disabled
+  by default.
+- **Ads tests:** provider unavailable, load/display failure, ready/close timeout,
+  duplicate rewards, dismissed/no reward, interstitial policy/impression counting,
+  web ad-free verification, and mocked-provider web integration.
+- Web font subset for the loading shell and reward prompt; build script and GitHub
+  Pages workflow copy it with the ad bridge/config.
+- Production safety switches and owner setup/approval documentation for AdSense H5,
+  native AdMob, consent/CMP, privacy and deployment.
+
+### Changed
+
+- Version 1.2.0; Android version code 3; iOS build 3.
+- Mock ads are now debug-builds only; release builds never display simulated ads.
+- Rewarded reward is not granted until the provider confirms completion and the ad
+  closes.
+- Interstitial stats are recorded only when an ad is actually shown.
+- README, architecture, monetization, privacy, web deployment, testing and release
+  checklist updated.
+
+### Preserved
+
+- Default builds remain free, offline-capable and ad-free; no real IDs, secrets, live
+  ads, purchases or external services are enabled by default.
+- Existing save data, skins, challenges, scoring, settings and platform behavior.
+
 ## [1.1.0] — 2026-11-03
 
 ### Added

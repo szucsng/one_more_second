@@ -32,6 +32,7 @@ const browser = await chromium.launch({
 });
 
 const errors = [];
+const requests = [];
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 },
   hasTouch: true,
@@ -39,6 +40,7 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 page.on('pageerror', (error) => errors.push(`[pageerror] ${error.message}`));
+page.on('request', (request) => requests.push(request.url()));
 page.on('requestfailed', (request) => errors.push(`[requestfailed] ${request.url()} ${request.failure()?.errorText}`));
 page.on('console', (message) => {
   if (message.type() === 'error') errors.push(`[console] ${message.text()}`);
@@ -48,6 +50,24 @@ try {
   await page.goto(URL, { waitUntil: 'load', timeout: 90000 });
   await page.waitForSelector('#status.is-hidden', { timeout: 90000 });
   await page.waitForTimeout(1000);
+  const adStatus = await page.evaluate(() => {
+    if (!window.OMSAdsBridge) return { bridge: false };
+    return {
+      bridge: true,
+      status: JSON.parse(window.OMSAdsBridge.getStatus()),
+      adScripts: document.querySelectorAll("script[data-oms-adsense]").length,
+      prompt: document.querySelectorAll("#oms-reward-prompt").length,
+    };
+  });
+  if (!adStatus.bridge) {
+    errors.push("[ads] OMSAdsBridge is missing from the web shell");
+  } else if (!adStatus.status.enabled) {
+    const googleRequests = requests.filter((url) => url.includes("googlesyndication") || url.includes("doubleclick"));
+    if (adStatus.adScripts !== 0) errors.push("[ads] disabled build loaded the AdSense script");
+    if (adStatus.prompt !== 0) errors.push("[ads] disabled build created a reward prompt");
+    if (googleRequests.length !== 0) errors.push(`[ads] disabled build made ${googleRequests.length} Google ad request(s)`);
+  }
+  console.log(`ads: ${JSON.stringify(adStatus)}`);
   await page.screenshot({ path: `${OUT}/web-menu.png` });
 
   // PLAY button position in the 390x844 letterboxed viewport.

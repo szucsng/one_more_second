@@ -32,6 +32,7 @@ var perfect_dodges: int = 0
 var _shake: float = 0.0
 var _run_finalized: bool = false
 var _ad_pending: bool = false
+var _restart_after_interstitial: bool = false
 var _next_milestone: int = 10
 var _last_switch_msec: int = -1000
 var _last_survival_second: int = -1
@@ -51,6 +52,11 @@ func _ready() -> void:
 	game_over.continue_pressed.connect(_request_continue)
 	Ads.rewarded_granted.connect(_on_ad_rewarded)
 	Ads.rewarded_dismissed.connect(_on_ad_dismissed)
+	Ads.rewarded_ready_changed.connect(_on_rewarded_ready_changed)
+	Ads.ad_shown.connect(_on_ad_shown)
+	Ads.ad_closed.connect(_on_ad_closed)
+	Ads.ad_failed.connect(_on_ad_failed)
+	Ads.interstitial_finished.connect(_on_interstitial_finished)
 	spawner.recovery_started.connect(_on_recovery_started)
 	Challenges.challenge_completed.connect(_on_challenge_completed)
 	_reduced_effects = bool(SaveManager.get_setting("reduced_effects"))
@@ -58,6 +64,7 @@ func _ready() -> void:
 
 
 func _start_new_run() -> void:
+	Ads.cancel_rewarded_prompt()
 	Challenges.refresh_daily()
 	state = State.RUNNING
 	score = 0
@@ -69,6 +76,7 @@ func _start_new_run() -> void:
 	revive_used = false
 	_run_finalized = false
 	_ad_pending = false
+	_restart_after_interstitial = false
 	_next_milestone = 10
 	_last_survival_second = -1
 	_shake = 0.0
@@ -331,12 +339,68 @@ func _show_game_over() -> void:
 	var saved_best := SaveManager.get_best_score()
 	var is_record := score > saved_best
 	var best := maxi(saved_best, score)
-	var can_continue := not revive_used and Ads.is_rewarded_available()
 	game_over.show_result(
-		score, best, is_record, elapsed, GameConfig.rank_for(score), can_continue,
+		score, best, is_record, elapsed, GameConfig.rank_for(score), false,
 		max_combo, perfect_dodges
 	)
+	game_over.set_buttons_enabled(true)
 	hud.set_pause_enabled(false)
+	_begin_rewarded_offer()
+
+
+func _begin_rewarded_offer() -> void:
+	if state != State.GAME_OVER:
+		return
+	if revive_used:
+		game_over.set_ad_status("")
+		return
+	game_over.set_ad_status("CHECKING OPTIONAL AD…")
+	if not Ads.prepare_rewarded_ad():
+		game_over.set_ad_status("NO OPTIONAL AD AVAILABLE • RESTART IS FREE")
+		return
+	if Ads.can_show_rewarded_ad():
+		_on_rewarded_ready_changed(true, "ready")
+
+
+func _on_rewarded_ready_changed(available: bool, reason: String) -> void:
+	if state != State.GAME_OVER or revive_used:
+		if available:
+			Ads.cancel_rewarded_prompt()
+		return
+	if available:
+		if Ads.uses_dom_reward_prompt():
+			game_over.set_ad_status("")
+		else:
+			game_over.show_continue_available(true, Ads.get_reward_disclosure())
+		return
+	if reason == "prompt_declined" or reason == "dismissed":
+		game_over.set_ad_status("AD SKIPPED • RESTART IS FREE")
+	elif reason == "timeout" or reason == "no_fill":
+		game_over.set_ad_status("NO OPTIONAL AD AVAILABLE • RESTART IS FREE")
+	elif reason == "cancelled":
+		pass
+	else:
+		game_over.set_ad_status("NO OPTIONAL AD AVAILABLE • RESTART IS FREE")
+
+
+func _enter_ad_state() -> void:
+	if state == State.AD:
+		return
+	state = State.AD
+	_ad_pending = true
+	spawner.set_frozen(true)
+	player.set_active(false)
+	game_over.set_buttons_enabled(false)
+	hud.set_pause_enabled(false)
+
+
+func _on_ad_shown(format: String) -> void:
+	if format != "rewarded":
+		return
+	if state == State.GAME_OVER:
+		_enter_ad_state()
+	_ad_pending = true
+	game_over.set_ad_status("")
 
 
 func _record_completed_run() -> void:
@@ -401,11 +465,22 @@ func _menu_from_pause() -> void:
 
 
 func _restart_from_game_over() -> void:
+	Ads.cancel_rewarded_prompt()
 	_record_completed_run()
+	_restart_after_interstitial = false
+	if Ads.can_show_interstitial():
+		_restart_after_interstitial = true
+		state = State.AD
+		game_over.set_buttons_enabled(false)
+		if Ads.show_interstitial():
+			return
+		if _restart_after_interstitial:
+			_restart_after_interstitial = false
 	_start_new_run()
 
 
 func _menu_from_game_over() -> void:
+	Ads.cancel_rewarded_prompt()
 	_record_completed_run()
 	SceneRouter.go_menu()
 
@@ -413,14 +488,15 @@ func _menu_from_game_over() -> void:
 func _request_continue() -> void:
 	if state != State.GAME_OVER or revive_used:
 		return
-	if not Ads.show_rewarded():
+	if Ads.uses_dom_reward_prompt():
 		return
-	_ad_pending = true
-	state = State.AD
-	spawner.set_frozen(true)
-	player.set_active(false)
-	game_over.set_buttons_enabled(false)
-	hud.set_pause_enabled(false)
+	if not Ads.can_show_rewarded_ad():
+		game_over.set_ad_status("AD NOT READY • RESTART IS FREE")
+		return
+	if not Ads.show_rewarded_ad():
+		game_over.set_ad_status("AD UNAVAILABLE • RESTART IS FREE")
+		return
+	_enter_ad_state()
 
 
 func _on_ad_rewarded() -> void:
@@ -440,11 +516,41 @@ func _on_ad_rewarded() -> void:
 	Analytics.track("revive_used", {"score": score, "duration": snappedf(elapsed, 0.1)})
 
 
-func _on_ad_dismissed() -> void:
-	if not _ad_pending:
+func _on_ad_dismissed(_reason: String = "dismissed") -> void:
+	if state == State.AD:
+		_ad_pending = false
+		state = State.GAME_OVER
+		game_over.set_buttons_enabled(true)
+		hud.set_pause_enabled(false)
+		game_over.set_ad_status("AD SKIPPED • RESTART IS FREE")
+	elif state == State.GAME_OVER:
+		game_over.set_ad_status("AD SKIPPED • RESTART IS FREE")
+
+
+func _on_ad_closed(format: String) -> void:
+	if format != "rewarded":
+		return
+	if state == State.AD:
+		_ad_pending = false
+		state = State.GAME_OVER
+		game_over.set_buttons_enabled(true)
+		hud.set_pause_enabled(false)
+		game_over.set_ad_status("AD CLOSED • RESTART IS FREE")
+
+
+func _on_ad_failed(format: String, _reason: String) -> void:
+	if format != "rewarded":
 		return
 	_ad_pending = false
-	state = State.GAME_OVER
-	game_over.set_buttons_enabled(true)
-	game_over.refresh_continue_visibility(not revive_used and Ads.is_rewarded_available())
-	hud.set_pause_enabled(false)
+	if state == State.AD:
+		state = State.GAME_OVER
+		game_over.set_buttons_enabled(true)
+		hud.set_pause_enabled(false)
+	game_over.set_ad_status("AD UNAVAILABLE • RESTART IS FREE")
+
+
+func _on_interstitial_finished(_shown: bool) -> void:
+	if not _restart_after_interstitial:
+		return
+	_restart_after_interstitial = false
+	_start_new_run()

@@ -185,14 +185,25 @@ func _run() -> void:
 	_gameplay.call("_request_continue")
 	await _wait(0.2)
 	_check(Ads.is_ad_open(), "test rewarded overlay opens")
-	var overlay: CanvasLayer = Ads.get("_overlay")
+	var overlay: Node = _find_test_ad(get_tree().root)
 	if overlay != null:
 		overlay.set("_remaining", 0.0)
 		overlay.call("_on_claim")
-		await _wait(0.2)
+		await _wait(0.4)
 	_check(bool(_gameplay.get("revive_used")), "revive was consumed")
 	_check(int(_gameplay.get("state")) == 0, "game continues after reward")
 	_check(player.alive, "player is revived")
+
+	# A run can be revived only once; the second death offers no ad reward.
+	spawner.stop()
+	player.kill()
+	await _wait(1.0)
+	_check(game_over.visible, "game over returns after the revived run")
+	_check(bool(_gameplay.get("revive_used")), "revive limit remains consumed")
+	_check(not Ads.can_show_rewarded_ad(), "no rewarded ad is offered after the revive limit")
+	_check(not game_over.get_node("%ContinueButton").visible, "continue button is hidden after one revive")
+	_gameplay.call("_restart_from_game_over")
+	await _wait(0.3)
 
 	# Persistence round-trip.
 	SaveManager.save_now()
@@ -292,6 +303,16 @@ func _force_pass(spawner: ObstacleSpawner, lane: int) -> void:
 	obstacle.position.y = Obstacle.PASS_Y - 4.0
 	obstacle.moving = true
 	await _wait(0.2)
+
+
+func _find_test_ad(node: Node) -> Node:
+	if node.get_script() != null and String(node.get_script().resource_path).ends_with("test_ad_overlay.gd"):
+		return node
+	for child in node.get_children():
+		var found := _find_test_ad(child)
+		if found != null:
+			return found
+	return null
 
 
 func _wait(seconds: float) -> void:

@@ -65,12 +65,12 @@ In `project.godot`:
 - Compatibility renderer for broad device support
 - `application/config/quit_on_go_back = false` → in-game back handling
 - app name: `ONE MORE SECOND`
-- version: `1.1.0`
+- version: `1.2.0`
 
 In `export_presets.cfg` (Android preset):
 
 - package/unique name: `com.onemoresecond.game` **← change to your owned domain**
-- version code `2`, version name `1.1.0`
+- version code `3`, version name `1.2.0`
 - immersive mode enabled
 - arm64-v8a enabled; 32-bit/x86 disabled for a smaller store build
   - enable `armeabi-v7a` only if you really need older 32-bit devices;
@@ -181,7 +181,7 @@ current instructions.
 ### Version codes
 
 `export_presets.cfg` → Android `version/code` must increase for **every** store
-upload (1.1.0 uses code `2`). `version/name` is the player-visible version. Update both, plus
+upload (1.2.0 uses code `3`). `version/name` is the player-visible version. Update both, plus
 `project.godot` and `GameConfig.VERSION`.
 
 ---
@@ -238,17 +238,21 @@ without changing the listing.
 
 ## 8. Adding real ads and purchases
 
-Current state: test-only rewarded overlay; store inactive. To ship real monetization:
+Current state: web ads are prepared/disabled; native `NativeAdMobProvider` is a
+fail-closed stub; store inactive. To ship native AdMob:
 
-1. Integrate an AdMob plugin compatible with **Godot 4.7** (for example the Poing
-   Studios AdMob plugin, or a maintained fork).
-2. Implement an `AdProvider` adapter and wire it in `AdsManager`.
-3. Replace the Google **test IDs** in `systems/ads/ad_config.gd` with production IDs
-   supplied by the owner; set `AdConfig.TEST_MODE = false`.
-4. Add consent (Google UMP / GDPR) and, if personalized ads are used, iOS ATT and
-   Android advertising ID disclosures.
-5. Configure the Android app ID meta-data required by the plugin.
-6. Test on real devices with test ads before enabling paid traffic.
+1. Verify a maintained Godot AdMob plugin against **Godot 4.7.2** (the Poing Studios
+   plugin documents Godot 4.5+; verify the latest release, don't assume compatibility).
+2. Install the plugin and follow its Android Gradle setup. Configure the AdMob app ID
+   and ad unit IDs. Android min SDK 24 / compile SDK 35.
+3. Implement `NativeAdMobProvider` against the plugin's real API, wire its lifecycle
+   to the existing `AdProvider` signals, and select it only when production is enabled.
+4. Add Google UMP consent before initialization/loading ads. Do not enable tracking or
+   ATT unless applicable.
+5. Test with Google test ad units and registered test devices, then on physical
+   devices.
+6. Enable `AdConfig.PRODUCTION_ADS_ENABLED = true` only after consent, IDs, signing
+   and device testing are complete.
 7. For IAP, integrate Google Play Billing, implement `Monetization.store_available`
    and `purchase()`, validate purchases server-side where possible, and grant skins /
    remove-ads only after a verified transaction.

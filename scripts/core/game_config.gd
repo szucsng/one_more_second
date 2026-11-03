@@ -3,7 +3,7 @@ extends RefCounted
 ## Tunable, gameplay-wide constants. Values are in the 1080x1920 design space.
 
 const GAME_NAME := "ONE MORE SECOND"
-const VERSION := "1.1.0"
+const VERSION := "1.2.0"
 const BASE_WIDTH := 1080.0
 const BASE_HEIGHT := 1920.0
 const DESIGN_FPS := 60

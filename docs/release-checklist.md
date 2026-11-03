@@ -6,7 +6,7 @@ Use this before every public build. Check only what was actually done.
 
 ## 0. Scope and approvals
 
-- [ ] Owner approved the release scope (v1.1.0: no real ads, no purchases).
+- [ ] Owner approved the release scope (v1.2.0: ads disabled by default, no purchases).
 - [ ] No paid service, store submission or publishing action was performed without
       explicit owner approval.
 - [ ] Package/bundle id, app name and support contact are final.
@@ -17,20 +17,22 @@ Use this before every public build. Check only what was actually done.
 
 ## 1. Versioning
 
-- [ ] `project.godot` → `application/config/version` updated (1.1.0).
+- [ ] `project.godot` → `application/config/version` updated (1.2.0).
 - [ ] `scripts/core/game_config.gd` → `VERSION` updated.
-- [ ] Android `version/code` increased (integer; 1.1.0 = 2).
+- [ ] Android `version/code` increased (integer; 1.2.0 = 3).
 - [ ] Android `version/name` updated.
 - [ ] iOS `application/short_version` updated.
-- [ ] iOS `application/version` (build) increased (1.1.0 = 2).
+- [ ] iOS `application/version` (build) increased (1.2.0 = 3).
 - [ ] `CHANGELOG.md` updated.
-- [ ] Git tag prepared (e.g. `v1.1.0`).
+- [ ] Git tag prepared (e.g. `v1.2.0`).
 
 ## 2. Code and content freeze
 
 - [ ] No debug prints, test scores or temporary flags in release paths.
-- [ ] `AdConfig.TEST_MODE` matches the intended release behavior.
-- [ ] `AdConfig.ALLOW_TEST_ADS_ON_WEB` is false for a public web build.
+- [ ] `AdConfig.PRODUCTION_ADS_ENABLED` matches the release intention.
+- [ ] `AdConfig.MOCK_ADS_ENABLED` cannot expose fake ads in a release build (debug-only).
+- [ ] `web/ads-config.js` `enabled`/`testMode`/consent match the release.
+- [ ] `web/ads-config.js` and ad bridge are copied into the export.
 - [ ] `Monetization.store_available` false unless billing is actually implemented.
 - [ ] `GameConfig.SUPPORT_URL` has no placeholder domain.
 - [ ] No TODOs for v1 features.
@@ -75,7 +77,10 @@ Use this before every public build. Check only what was actually done.
 - [ ] Fullscreen (where supported).
 - [ ] Saves survive reload.
 - [ ] No console errors.
-- [ ] No ad prompt (web is ad-free).
+- [ ] Default ad-free web: bridge reports `ads_disabled`, no AdSense script, zero
+      Google requests, no DOM prompt.
+- [ ] If ad-enabled: approved domain/account, publisher ID, CMP consent and test-mode
+      validation completed before production mode.
 - [ ] GitHub Pages/itch.io deployment tested on a phone.
 - [ ] Cache/version strategy documented for the fixed filenames.
 
@@ -121,16 +126,31 @@ Use this before every public build. Check only what was actually done.
 
 ## 8. Monetization (only if enabled)
 
-- [ ] Real provider plugin compatible with Godot 4.7.2.
-- [ ] Production IDs supplied by the owner; test IDs removed/disabled.
-- [ ] Consent/UMP implemented where required.
-- [ ] ATT implemented only if tracking is used.
-- [ ] Rewarded ad: optional, one per run, failure-safe.
-- [ ] Interstitial: off during gameplay; frequency cap verified.
-- [ ] Banner: not covering gameplay/UI.
+### Web H5 ads
+- [ ] AdSense H5 Games Ads application approved and domain approved.
+- [ ] HTTPS hosting and `allow="autoplay"` on any embedding iframe.
+- [ ] Publisher ID set in `web/ads-config.js`; no secret committed.
+- [ ] Google-certified CMP integrated; consent resolved before ads.
+- [ ] `testMode` verified with provider test ads, then set false.
+- [ ] `AdConfig.PRODUCTION_ADS_ENABLED = true` only for the release build.
+- [ ] Rewarded prompt: opt-in, direct DOM click, no reward on dismiss/failure/timeout.
+- [ ] Duplicate reward callbacks cannot add a second revive.
+- [ ] Interstitial disabled until separately tested; frequency cap correct.
+- [ ] No banner in gameplay.
+- [ ] Production build still tested with ad blockers/offline to ensure restart/menu work.
+
+### Native AdMob
+- [ ] Maintained plugin compatible with Godot 4.7.2.
+- [ ] AdMob app + rewarded + interstitial IDs supplied by owner.
+- [ ] UMP consent integrated; ATT only if tracking is used.
+- [ ] Test ads on physical Android/iOS devices before production.
+- [ ] Native adapter implemented against the real plugin API; fail-closed stub removed.
+- [ ] Release signing/export tested.
+
+### Store / compliance
 - [ ] IAP products created; restore works; receipts validated.
 - [ ] Remove Ads semantics match the description.
-- [ ] Privacy policy and store forms updated.
+- [ ] Privacy policy, CMP disclosures and store data-safety forms updated.
 - [ ] Ad/IAP content appropriate for the age rating.
 - [ ] No misleading buttons or forced ads.
 
