@@ -104,14 +104,16 @@ Key decisions:
   Autoloads and the ad overlay keep processing.
 - **Timer is gameplay-owned.** `elapsed` advances only in `RUNNING`; pause and ad
   time do not inflate stats.
-- **Run finalization is guarded.** `_run_finalized` ensures exactly one save and one
-  `game_over` analytics event per run, no matter which exit path fires.
+- **Run finalization is guarded.** `_run_persisted` / `_run_analytics_sent` ensure
+  exactly one save and one `game_over` analytics event per run, no matter which exit
+  path fires.
 - **Revive does not end the run.** The score and timer continue; at most one revive is
   available per run (`REVIVED_RUNS_LIMIT = 1`). The spawner is cleared and the player
   receives 2.2 s of invulnerability.
-- **Game over is not recorded immediately on death.** The player may watch the optional
-  ad and continue. The run is finalized when they restart, return to the menu, close
-  the app, or otherwise leave the loop.
+- **Game over is persisted immediately on death.** On mobile the app can be swiped
+  away from the game-over screen, so the score, best and stats are saved as soon as
+  the result appears. A successful revive rolls that provisional record back and the
+  continuing run is recorded once when it truly ends.
 - **Focus loss auto-pauses.** On mobile, backgrounding the app while running opens the
   pause panel instead of letting the run continue unseen.
 - **Android back** pauses/resumes during play and opens the menu from game over;

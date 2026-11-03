@@ -176,10 +176,14 @@ func _run() -> void:
 	_check(int(_gameplay.get("combo")) == combo_before_pause, "combo survives pause/resume")
 
 	# Rewarded revive (simulated test placement).
+	var games_before_death := int((SaveManager.data["stats"] as Dictionary)["games_played"])
+	var best_before_death := SaveManager.get_best_score()
 	spawner.stop()
 	player.kill()
 	await _wait(1.0)
 	_check(game_over.visible, "second game over shows")
+	_check(int((SaveManager.data["stats"] as Dictionary)["games_played"]) == games_before_death + 1, "game over persists run stats immediately")
+	_check(SaveManager.get_best_score() >= int(_gameplay.get("score")), "game over persists the record immediately")
 	_check(int(_gameplay.get("combo")) == 0, "death clears combo before revive")
 	_check(str(game_over.get_node("%ComboValue").text) == str(int(_gameplay.get("max_combo"))), "game over reports max combo")
 	_gameplay.call("_request_continue")
@@ -191,6 +195,8 @@ func _run() -> void:
 		overlay.call("_on_claim")
 		await _wait(0.4)
 	_check(bool(_gameplay.get("revive_used")), "revive was consumed")
+	_check(int((SaveManager.data["stats"] as Dictionary)["games_played"]) == games_before_death, "revive rolls back the provisional run record")
+	_check(SaveManager.get_best_score() == best_before_death, "provisional record is rolled back on revive")
 	_check(int(_gameplay.get("state")) == 0, "game continues after reward")
 	_check(player.alive, "player is revived")
 
@@ -199,11 +205,13 @@ func _run() -> void:
 	player.kill()
 	await _wait(1.0)
 	_check(game_over.visible, "game over returns after the revived run")
+	_check(int((SaveManager.data["stats"] as Dictionary)["games_played"]) == games_before_death + 1, "the revived run is recorded once on its final death")
 	_check(bool(_gameplay.get("revive_used")), "revive limit remains consumed")
 	_check(not Ads.can_show_rewarded_ad(), "no rewarded ad is offered after the revive limit")
 	_check(not game_over.get_node("%ContinueButton").visible, "continue button is hidden after one revive")
 	_gameplay.call("_restart_from_game_over")
 	await _wait(0.3)
+	_check(int((SaveManager.data["stats"] as Dictionary)["games_played"]) == games_before_death + 1, "restart does not double-count the run")
 
 	# Persistence round-trip.
 	SaveManager.save_now()

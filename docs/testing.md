@@ -23,7 +23,7 @@ Result: **pass**, no GDScript parse errors. The usual Godot headless shutdown wa
 about lingering ObjectDB/resources appears after tests quit; it does not occur during
 normal gameplay.
 
-### 1.2 Gameplay integration — 55 assertions PASS
+### 1.2 Gameplay integration — 61 assertions PASS
 
 ```bash
 godot --headless --path . res://tests/GameplayTest.tscn
@@ -42,7 +42,9 @@ Result: **PASS (0 failures)**. Covers:
   repeated award call is blocked;
 - a safe switch without danger does not award a perfect dodge;
 - pause/resume preserves combo; death clears it; game over reports max combo;
-- a rewarded mock ad revives once; a second death offers no second revive;
+- game over persists the run immediately, even if the app is killed before restart;
+- a rewarded mock ad revives once and rolls back the provisional record;
+- restart does not double-count the run; a second death offers no second revive;
 - rewarded test ad revive works;
 - save reload preserves best score, skin and volume;
 - a completed challenge adds its reward to the run score exactly once, and a second
@@ -191,22 +193,51 @@ the 1.1 gameplay update) is included in this exported build.
 
 ---
 
+### 3.2 Android debug APK — emulator PASS (no physical device attached)
+
+The 1.2.0 debug APK was built with Godot 4.7.2 and installed on an Android 15
+(API 35) **ARM64 emulator**, because no physical phone was connected.
+
+Verified:
+
+- `apksigner verify`: v2 + v3 signatures valid, debug certificate.
+- `zipalign -c 4`: verification successful.
+- Package `com.onemoresecond.game`, version code 3, version name 1.2.0,
+  min SDK 24, label **ONE MORE SECOND**, portrait activity, arm64-v8a only.
+- Cold install + launch: Godot 4.7.2 started, Compatibility renderer, menu rendered
+  in portrait at 1080×2400.
+- Touch: PLAY, pause/restart and playfield lane switching all worked.
+- Gameplay: run ended, game-over card rendered; Android deliberately showed
+  **NO OPTIONAL AD AVAILABLE • RESTART IS FREE** (no mock/real ad on mobile).
+- Save: after death, `save.json` already contained the run stats and best score
+  **without pressing Restart**. After `am force-stop` + cold relaunch the menu
+  showed the saved best score.
+- Lifecycle: Home → `OnPause`/`OnStop`, relaunch → `OnStart`/`OnResume` (HOT), same
+  process and preserved screen.
+- No `FATAL`/`AndroidRuntime` crash and no Godot script errors in logcat.
+- Portrait only; no ads permission or network dependency.
+
+Not verified: a real phone, haptics, performance on low-end hardware, notches, and
+native AdMob (intentionally not bundled).
+
+---
+
 ## 4. Test matrix
 
 | Area | macOS native | Web (headless Chrome) | Android | iOS |
 | --- | --- | --- | --- | --- |
-| Boot / import | pass | pass | not built | not built |
-| Menu / navigation | pass | pass (play/pause) | not tested | not tested |
-| Touch input | synthetic pass | emulated pass | not tested | not tested |
+| Boot / import | pass | pass | emulator pass | not built |
+| Menu / navigation | pass | pass (play/pause) | emulator pass | not tested |
+| Touch input | synthetic pass | emulated pass | emulator pass | not tested |
 | Mouse input | pass | pass | n/a | n/a |
 | Keyboard input | pass | pass | n/a | n/a |
 | Combo scoring | automated | code in build, not interacted to combo | not tested | not tested |
 | Perfect dodge | automated | code in build | not tested | not tested |
 | Daily challenges | automated + visual | screen included; not clicked through | not tested | not tested |
-| Ads (disabled default) | automated | ad-free verified | not tested | not tested |
+| Ads (disabled default) | automated | ad-free verified | ad-free verified (no provider) | not tested |
 | Web H5 ad bridge | mocked contract | mocked prompt → revive; not live Google | n/a | n/a |
 | Native AdMob | fail-closed stub | n/a | not built | not built |
-| Save persistence | automated | IndexedDB verified in 1.0 flow | not tested | not tested |
+| Save persistence | automated | IndexedDB verified in 1.0 flow | emulator pass (cold relaunch) | not tested |
 | Safe area / notch | n/a | n/a | not tested | not tested |
 | Haptics | n/a | n/a | not tested | not tested |
 | Real ads / IAP | not bundled | disabled | not bundled | not bundled |
@@ -221,7 +252,8 @@ hardware/accounts.
 
 - Play 20+ runs; verify combo milestones at 5/10/20/30 and score consistency.
 - Intentionally switch late into an obstacle: no perfect reward should be granted.
-- Play on a low-end Android phone and a notched iPhone.
+- Play on a low-end Android phone and a notched iPhone (the current 1.2.0 APK was
+  validated on an ARM64 emulator only).
 - Background/foreground during a run, pause and ad (when enabled).
 - Kill the app mid-run; relaunch and verify stats/save.
 - Cross midnight or change the date to verify daily rollover and no duplicate rewards.

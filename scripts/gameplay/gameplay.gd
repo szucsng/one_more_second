@@ -30,7 +30,11 @@ var dodges: int = 0
 var perfect_dodges: int = 0
 
 var _shake: float = 0.0
-var _run_finalized: bool = false
+var _run_persisted: bool = false
+var _run_analytics_sent: bool = false
+var _pre_finalize_stats: Dictionary = {}
+var _pre_finalize_ads: Dictionary = {}
+var _pre_finalize_best: int = 0
 var _ad_pending: bool = false
 var _restart_after_interstitial: bool = false
 var _next_milestone: int = 10
@@ -74,7 +78,11 @@ func _start_new_run() -> void:
 	perfect_dodges = 0
 	elapsed = 0.0
 	revive_used = false
-	_run_finalized = false
+	_run_persisted = false
+	_run_analytics_sent = false
+	_pre_finalize_stats.clear()
+	_pre_finalize_ads.clear()
+	_pre_finalize_best = 0
 	_ad_pending = false
 	_restart_after_interstitial = false
 	_next_milestone = 10
@@ -164,7 +172,7 @@ func _notification(what: int) -> void:
 				State.GAME_OVER:
 					_menu_from_game_over()
 		NOTIFICATION_WM_CLOSE_REQUEST:
-			if not _run_finalized:
+			if not _run_analytics_sent:
 				_finalize_run(state != State.GAME_OVER)
 
 
@@ -345,6 +353,10 @@ func _show_game_over() -> void:
 	)
 	game_over.set_buttons_enabled(true)
 	hud.set_pause_enabled(false)
+	# Persist the finished run immediately: on mobile the app can be swiped away
+	# from the game-over screen, and the UI promises the record is already saved.
+	# A successful revive rolls these counters back in _restore_after_revive().
+	_persist_run()
 	_begin_rewarded_offer()
 
 
@@ -407,13 +419,41 @@ func _record_completed_run() -> void:
 	_finalize_run(false)
 
 
-func _finalize_run(abandoned: bool) -> void:
-	if _run_finalized:
+func _persist_run() -> void:
+	if _run_persisted:
 		return
-	_run_finalized = true
-	var previous_best := SaveManager.get_best_score()
-	var is_record := score > previous_best
+	_run_persisted = true
+	_pre_finalize_best = SaveManager.get_best_score()
+	_pre_finalize_stats = (SaveManager.data.get("stats", {}) as Dictionary).duplicate(true)
+	_pre_finalize_ads = (SaveManager.data.get("ads", {}) as Dictionary).duplicate(true)
 	SaveManager.record_run(score, elapsed, dodges, max_combo, perfect_dodges)
+
+
+func _restore_after_revive() -> void:
+	if not _run_persisted:
+		return
+	# The rewarded view was recorded by AdsManager just before this callback;
+	# keep those counters and roll back the provisional run record.
+	var current_stats: Dictionary = SaveManager.data.get("stats", {})
+	var current_ads: Dictionary = SaveManager.data.get("ads", {})
+	SaveManager.data["stats"] = _pre_finalize_stats.duplicate(true)
+	SaveManager.data["stats"]["revives_used"] = int(current_stats.get("revives_used", 0))
+	SaveManager.data["best_score"] = _pre_finalize_best
+	SaveManager.data["ads"] = _pre_finalize_ads.duplicate(true)
+	SaveManager.data["ads"]["rewarded_views"] = int(current_ads.get("rewarded_views", 0))
+	SaveManager.data["ads"]["last_interstitial_unix"] = float(current_ads.get("last_interstitial_unix", 0.0))
+	SaveManager.save_now()
+	SaveManager.progress_changed.emit()
+	_run_persisted = false
+	_run_analytics_sent = false
+
+
+func _finalize_run(abandoned: bool) -> void:
+	_persist_run()
+	if _run_analytics_sent:
+		return
+	_run_analytics_sent = true
+	var is_record := score > _pre_finalize_best
 	Analytics.track("score_reached", {"score": score})
 	Analytics.track("game_over", {
 		"score": score,
@@ -503,6 +543,7 @@ func _on_ad_rewarded() -> void:
 	if not _ad_pending:
 		return
 	_ad_pending = false
+	_restore_after_revive()
 	revive_used = true
 	state = State.RUNNING
 	game_over.hide_result()

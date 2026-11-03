@@ -54,7 +54,7 @@ func _create_provider() -> AdProvider:
 		if Platform.is_mobile:
 			return NativeAdMobProvider.new()
 		return UnavailableAdProvider.new("desktop_ads_not_supported")
-	if AdConfig.MOCK_ADS_ENABLED and OS.is_debug_build():
+	if AdConfig.MOCK_ADS_ENABLED and OS.is_debug_build() and not Platform.is_mobile:
 		if not Platform.is_web or (AdConfig.ALLOW_MOCK_ON_WEB and OS.is_debug_build()):
 			return MockAdProvider.new()
 	return UnavailableAdProvider.new("production_ads_disabled")

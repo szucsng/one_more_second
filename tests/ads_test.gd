@@ -38,6 +38,13 @@ func _run() -> void:
 	_check(AdPolicy.can_show_interstitial(true, 3, 800.0, 1000.0, 3, 150.0), "cooldown expires correctly")
 	_check(not Ads.can_show_interstitial(), "live manager keeps interstitials disabled")
 
+	# Native provider is present but deliberately fail-closed with no plugin.
+	var native := NativeAdMobProvider.new()
+	_check(not native.initialize(), "native AdMob provider fails closed without a plugin")
+	_check(not native.prepare_rewarded_ad(), "native provider offers no rewarded ad")
+	_check(not native.can_show_rewarded_ad(), "native provider reports no reward availability")
+	native.queue_free()
+
 	# Provider unavailable.
 	Ads.set_test_provider(UnavailableAdProvider.new("test_unavailable"))
 	await get_tree().process_frame

@@ -35,6 +35,9 @@ Format follows the spirit of Keep a Changelog; versions follow semantic versioni
 - Mock ads are now debug-builds only; release builds never display simulated ads.
 - Rewarded reward is not granted until the provider confirms completion and the ad
   closes.
+- Game-over results (best score and run stats) are persisted immediately on death,
+  because the app can be swiped away from the result screen. A successful revive
+  rolls the provisional record back so a revived run is counted once when it ends.
 - Interstitial stats are recorded only when an ad is actually shown.
 - README, architecture, monetization, privacy, web deployment, testing and release
   checklist updated.

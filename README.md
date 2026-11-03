@@ -303,10 +303,11 @@ See [docs/privacy.md](docs/privacy.md).
 Verified in this build:
 
 - Godot 4.7.2 project import with zero parse errors.
-- Headless gameplay integration test (55 assertions): boot, input, exact combo
+- Headless gameplay integration test (61 assertions): boot, input, exact combo
   multipliers, one-per-obstacle perfect dodges, collision/reset, restart,
-  pause/resume, challenge reward and duplicate guard, one-revive-per-run, save
-  round-trip and analytics.
+  pause/resume, challenge reward and duplicate guard, immediate game-over save,
+  provisional-record rollback on revive, one-revive-per-run, save round-trip and
+  analytics.
 - Pure scoring/difficulty/daily-catalog test (57 assertions) and challenge
   persistence/rollover test (14 assertions).
 - Ads lifecycle/policy test (46 assertions): provider unavailable, load/display
@@ -326,6 +327,9 @@ Verified in this build:
   → one revive, with no console errors. **Not** live Google fill/approval.
 - Mobile browser emulation (390×844, touch): portrait layout, touch PLAY, single-tap
   lane switch, touch pause, no console errors.
+- Android 1.2.0 debug APK installed on an Android 15 ARM64 emulator: boot, portrait
+  menu, touch lane switch, game over, immediate save, cold-relaunch best score,
+  Home/resume lifecycle, no crash or script errors. **No physical phone was attached.**
 
 Not verified (requires owner accounts/hardware):
 
